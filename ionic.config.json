@@ -1,0 +1,8 @@
+{
+  "name": "oriTrail",
+  "app_id": "692db80b",
+  "type": "ionic-angular",
+  "integrations": {
+    "cordova": {}
+  }
+}
