@@ -1,7 +1,7 @@
 # oriTrail
 Projet de course d'orientation.
 
-Application mobile multiplateforme Ionic 3.
+Application mobile multiplateforme (iOS/Android) Ionic 3.
 
 Technologies intégrés à Ionic :
 - Angular 4
