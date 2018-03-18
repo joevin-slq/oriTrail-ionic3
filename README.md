@@ -1,4 +1,4 @@
-# oriTrail
+# oriTrail-ionic3
 Projet de course d'orientation.
 
 Application mobile multiplateforme (iOS/Android) Ionic 3.
