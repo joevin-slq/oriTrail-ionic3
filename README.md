@@ -20,8 +20,15 @@ Les utilisateurs pourront réaliser une course d'orientation en scannant QR Code
 Installer [Node.js](http://nodejs.org/)
 
 Installer [git](https://git-scm.com/)
-
+    ```console
     git clone https://github.com/joedu12/oriTrail-ionic3.git
     cd oriTrail-ionic3
     npm install -g cordova ionic
     ionic serve
+    ```
+
+Déploiement iOS
+    Ouvrir le dossier platform/ios avec Xcode, signer le projet puis :
+    ```console
+    ionic cordova run ios -l -c -s --debug
+    ```
