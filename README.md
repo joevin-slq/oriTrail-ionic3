@@ -37,6 +37,14 @@ Il faut installer cordova 7.1.0 afin de rendre le plugin de QRCode fonctionnel a
     
     npm uninstall -g cordova && npm install -g cordova@7.1.0
     
+
+#### Mise à jour des packages
+En cas d'erreur au lancement, il faut mettre à jour ses packages depuis le fichier package.json :
+
+    npm outdated # visualiser les mises à jour
+    npm update   # mettre à jour ses packages
+
+
 ---
 ## Technologies intégrées à Ionic :
 - Angular 4
