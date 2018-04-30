@@ -50,6 +50,10 @@
 
           this.qrScanner.resumePreview();
 
+          // Permet d'avoir la preview sur iOS
+          // https://forum.ionicframework.com/t/ionic-qr-code-scan-not-opening-camera-for-ios-and-android-devices/101512/23 => Zerok aug 17'
+          // et https://forum.ionicframework.com/t/qr-scanner-seems-to-be-working-in-the-background-but-doesnt-display-a-preview-when-calling-show/99822/5
+          window.document.querySelector('ion-app').classList.add('cameraView')
           // show camera preview
           this.qrScanner.show(); 
 
