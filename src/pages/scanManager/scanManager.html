@@ -1,0 +1,45 @@
+<ion-header>
+  <ion-navbar>
+    <button ion-button menuToggle>
+      <ion-icon name="menu"></ion-icon>
+    </button>
+    <ion-title>QRCoder scanner</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<!-- camera scan QRcode -->
+<ion-content [class.scanning]="displayCamera()">
+
+  <!-- state -> before -->
+  <div *ngIf="state == 'before'">
+    <h1>installation de la course</h1>
+    <p>
+      voici comment ça marche et qu'est-ce qu'il faut faire pour commencer<br/>
+      cliquer sur "Commencer"
+    </p>
+    <button  style="background-color: blue" ion-button (click)="startScanning()">Commencer</button>
+  </div>
+
+   <!-- state -> config -->
+   <div *ngIf="state == 'config'">
+    <h1>Scannez le QR Code de configuration</h1>
+  </div>
+
+  <!-- state -> started -->
+  <div *ngIf="state == 'start'">
+    <h1>Scannez le QR Code de départ</h1>
+  </div>
+
+  <!-- state -> ended -->
+  <div *ngIf="state == 'ended'">
+    <h1>Fin</h1>
+    <p>
+      Vous avez terminer l'installation de la courses, il faut maintenant vous connecter à internet pour envoyer les données au serveur.
+    </p>
+  </div>
+
+  <qrcodescan [hidden]="!displayCamera()"></qrcodescan>
+
+</ion-content>
+
+
