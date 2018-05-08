@@ -6,18 +6,19 @@ import { MyApp } from './app.component';
 
 import { AccueilPage } from '../pages/accueil/accueil';
 import { ItemDetailsPage } from '../pages/item-details/item-details';
-import { ListPage } from '../pages/list/list'; 
-import { QrcodeScanPage } from '../pages/qrcodescan/qrcodescan'
+import { ListPage } from '../pages/list/list';
+import { scanManager } from '../pages/scanManager/scanManager';
+import { qrCodeScan } from '../pages/qrcodescan/qrcodescan'
 import { JsonTestPage } from '../pages/jsonTest/jsonTest'
-import { modalConnexionModule } from '../pages/connexion/modalConnexion.module';
 
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
-import { QRScanner } from '@ionic-native/qr-scanner'; 
+import { QRScanner } from '@ionic-native/qr-scanner';
+import { modalConnexionModule } from '../pages/connexion/modalConnexion.module';
 
 import { HttpClientModule } from '@angular/common/http'
 
-import { IonicStorageModule } from '@ionic/storage' 
+import { IonicStorageModule } from '@ionic/storage'
 
 @NgModule({
   declarations: [
@@ -25,8 +26,9 @@ import { IonicStorageModule } from '@ionic/storage'
     AccueilPage,
     ItemDetailsPage,
     ListPage,
-    QrcodeScanPage,
-    JsonTestPage,
+    qrCodeScan,
+    scanManager,
+    JsonTestPage
   ],
   imports: [
     BrowserModule,
@@ -41,8 +43,9 @@ import { IonicStorageModule } from '@ionic/storage'
     AccueilPage,
     ItemDetailsPage,
     ListPage,
-    QrcodeScanPage,  
-    JsonTestPage,
+    qrCodeScan,
+    scanManager,
+    JsonTestPage
   ],
   providers: [
     StatusBar,
@@ -51,5 +54,5 @@ import { IonicStorageModule } from '@ionic/storage'
     QRScanner
   ]
 })
-export class AppModule { 
+export class AppModule {
 }

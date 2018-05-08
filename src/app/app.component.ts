@@ -4,12 +4,12 @@ import { Platform, MenuController, Nav } from 'ionic-angular';
 
 import { AccueilPage } from '../pages/accueil/accueil';
 import { ListPage } from '../pages/list/list';
-import { QrcodeScanPage } from '../pages/qrcodescan/qrcodescan';
+import { scanManager } from '../pages/scanManager/scanManager';
 import { JsonTestPage } from '../pages/jsonTest/jsonTest';
 
 import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
- 
+
 
 
 @Component({
@@ -34,7 +34,7 @@ export class MyApp {
     this.pages = [
       { title: 'Accueil', component: AccueilPage },
       { title: 'My First List', component: ListPage },
-      { title: 'QRcode Test', component: QrcodeScanPage},
+      { title: 'QRcode', component: scanManager},
       { title: 'Json Test', component: JsonTestPage}
     ];
   }
@@ -46,7 +46,7 @@ export class MyApp {
       // Load QR Code plugins
       // Optionally request the permission early
       // Optionally request the permission early
-      
+
       // default
       this.statusBar.styleDefault();
       this.splashScreen.hide();

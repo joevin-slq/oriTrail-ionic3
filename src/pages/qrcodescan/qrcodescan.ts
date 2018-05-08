@@ -1,51 +1,43 @@
   import { Component } from '@angular/core';
-
   import { QRScanner, QRScannerStatus } from '@ionic-native/qr-scanner';
-  import { Input } from '@angular/core';
- 
+  import { Events } from 'ionic-angular'
+import { Subscription } from 'rxjs/Subscription';
+
 
   @Component({
     selector: 'qrcodescan',
     templateUrl: 'qrcodescan.html'
   })
-  export class QrcodeScanPage {
-    @Input() mode: string;
+  export class qrCodeScan {
 
-    public state: string = "before"; //different possible states: before, config, started, baliseLoop, ..., ended, error
-    //en fonction du "state" on affiche la div qui correspond
+    private scanSubscription: Subscription;
 
-    constructor(private qrScanner : QRScanner) {
-      
-    } 
- 
+    constructor(private qrScanner : QRScanner, private events: Events) {
+      console.log("qrCodeScan constructor...");
+      events.subscribe("scanManager:stopScanning", ()=>{this.stopScanning()});
+      events.subscribe("scanManager:startScanning", ()=>{this.startScanning()});
+    }
+
     /**
      * Scan function
      */
-    qrscanner() {
- 
+    public startScanning() {
+      console.log("qrcodescan.startScanning()");
       this.qrScanner.prepare()
       .then((status: QRScannerStatus) => {
         if (status.authorized) {
 
           // camera permission was granted
           console.log('camera authorized');
-          this.state = "config";
- 
-    
+
           // start scanning
-          let scanSub = this.qrScanner.scan().subscribe((text: string) => {
+          this.scanSubscription = this.qrScanner.scan().subscribe((text: string) => {
             console.log('Scanned something', text);
-            console.log(text);
-            this.qrScanner.hide(); // hide camera preview
-
-            this.state = "ended";// on viens de scanner la balise end
-
-            if(this.state == "ended"){
-              scanSub.unsubscribe(); // stop scanning
-            }
+            // this.callback.emit(text); //send the info to the scanManager
+            this.events.publish("qrcodescan:newqr", text);
           });
 
-          // select front camera 
+          // select front camera
           this.qrScanner.useBackCamera();
 
           this.qrScanner.resumePreview();
@@ -55,7 +47,7 @@
           // et https://forum.ionicframework.com/t/qr-scanner-seems-to-be-working-in-the-background-but-doesnt-display-a-preview-when-calling-show/99822/5
           window.document.querySelector('ion-app').classList.add('cameraView')
           // show camera preview
-          this.qrScanner.show(); 
+          this.qrScanner.show();
 
           // wait for user to scan something, then the observable callback will be called
 
@@ -72,7 +64,18 @@
       .catch((e: any) => {
         console.log('Error is' + e);
       });
+    }
 
+    public stopScanning(){
+      this.qrScanner.hide(); // hide camera preview
+      if(this.scanSubscription != undefined){
+        this.scanSubscription.unsubscribe(); // stop scanning
+      }
+
+      console.log("scan stopped");
+
+      //la camera continue de tourner quand meme donc on détruit l'objet
+      this.qrScanner.destroy();
     }
 
   }
