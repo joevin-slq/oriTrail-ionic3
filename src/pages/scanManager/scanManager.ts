@@ -36,22 +36,7 @@ export class scanManager {
 
   }
 
-  ionViewDidLoad() {
-    this.platform.ready().then(() => this.obtenerPosicion());
-  }
-
-  obtenerPosicion(): any {
-
-    //get time advanced geolocation
-    this.service.getTime().then(obtenido => {
-      console.log(obtenido)
-    }
-    ).catch((err) => {
-      console.log("erreur niggaz: " + err)
-    }
-    );
-  }
-
+  
   public displayCamera(): boolean {
     return !((this.state == "before") || (this.state == "ended"));
   }
