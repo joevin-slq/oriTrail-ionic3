@@ -34,7 +34,7 @@ export class MyApp {
     this.pages = [
       { title: 'Accueil', component: AccueilPage },
       { title: 'My First List', component: ListPage },
-      { title: 'QRcode', component: scanManager},
+      { title: 'Débuter une course', component: scanManager},
       { title: 'Json Test', component: JsonTestPage}
     ];
   }

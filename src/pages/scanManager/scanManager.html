@@ -8,16 +8,18 @@
 </ion-header>
 
 <!-- camera scan QRcode -->
-<ion-content [class.scanning]="displayCamera()">
+<ion-content [class.scanning]="displayCamera()" padding>
 
   <!-- state -> before -->
-  <div *ngIf="state == 'before'">
-    <h1>installation de la course</h1>
-    <p>
-      voici comment ça marche et qu'est-ce qu'il faut faire pour commencer<br/>
-      cliquer sur "Commencer"
+  <div *ngIf="state == 'before'" >
+    <h1>Installation de la course</h1>
+    <p style="text-align: justify;">
+      Pour commencer une course veuillez scanner le QRcode de configuration.<br/><br/>
+      Pour cela cliquer sur "Commencer"
     </p>
-    <button  style="background-color: blue" ion-button (click)="startScanning()">Commencer</button>
+    <div style="text-align: center">
+      <button  style="background-color: blue;" ion-button (click)="startScanning()">Commencer</button>
+    </div>
   </div>
 
    <!-- state -> config -->

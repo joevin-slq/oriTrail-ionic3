@@ -17,9 +17,13 @@ import { QRScanner } from '@ionic-native/qr-scanner';
 import { modalConnexionModule } from '../pages/connexion/modalConnexion.module';
 import { modalEnregistrementModule } from '../pages/enregistrement/modalEnregistrement.module';
 
-import { HttpClientModule } from '@angular/common/http'
 
-import { IonicStorageModule } from '@ionic/storage'
+import { HttpClientModule } from '@angular/common/http'
+import { Geolocation } from '@ionic-native/geolocation';
+import { IonicStorageModule } from '@ionic/storage' 
+import { GpsProvider } from '../providers/gps/gps';
+
+import { Service } from '../utils/services'
 
 @NgModule({
   declarations: [
@@ -53,7 +57,10 @@ import { IonicStorageModule } from '@ionic/storage'
     StatusBar,
     SplashScreen,
     {provide: ErrorHandler, useClass: IonicErrorHandler},
-    QRScanner
+    QRScanner,
+    Geolocation, 
+    GpsProvider,
+    Service
   ]
 })
 export class AppModule {
