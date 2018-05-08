@@ -9,13 +9,13 @@ import { LoadingController } from 'ionic-angular';
  
 
 @Component({
-  templateUrl: 'modalConnexion.html'
+  templateUrl: 'modalEnregistrement.html'
 })
-export class modalConnexion {
-    // resultat du formulaire de connexion
-    login = {id: '', pass: ''}
-    // contient le résultat de la connexion
-    resultatConnexion;
+export class modalEnregistrement {
+    // resultat du formulaire de l'enregistrement
+    signup = {nom: '', prenom: '', id: '', pass: '', confirm_pass: ''}
+    // contient le résultat de l'enregistrement
+    resultatEnregistrement;
 
   constructor(public viewCtrl: ViewController,
               private http: HttpClient,
@@ -23,8 +23,7 @@ export class modalConnexion {
               public loadingCtrl: LoadingController  
             ) {}
 
-
-   // cacher le modal
+  // cacher le modal
   dismiss() {
     this.viewCtrl.dismiss();
   }
@@ -33,33 +32,33 @@ export class modalConnexion {
    /**
      * Simple appel à l'api pour se connecter
      */
-    loginApi() { 
+    signupApi() { 
         let loader = this.loadingCtrl.create({
-            content: "Connexion en cours..."
+            content: "Enregistrement en cours..."
           });
           loader.present();
         
-        let id = this.login.id
-        let pass = this.login.pass
+        let nom = this.signup.nom
+        let prenom = this.signup.prenom
+        let id = this.signup.id
+        let pass = this.signup.pass
+        let confirm_pass = this.signup.confirm_pass
 
+        // TODO FAIRE LA RQT D'ENREGISTREMENT
         let data:Observable<any> = this.http.post("https://www.oritrail.fr/api/token/create", 
               { login: id, password: pass },
                 
         )
            // ok
          data.subscribe(async result => { 
-            // TODO sauvegarder le token dans le Sotage 
-
-            // TODO check si l'enregistrement de la token est effectif ou non
-            this.storage.set('token', result[0].token);
-
-            // DEBUG
+            // TODO sauvegarder le token dans le Sotage
+            // DEBUG 
             console.log(result[0].status)
             console.log(result[0].token) 
             // on enleve le loader le chargement est finit
             loader.dismiss();
 
-            this.resultatConnexion="<h5> Connexion réussie ! Redirection en cours ... </h5>";
+            this.resultatEnregistrement="<h5> Enregistrement réussi ! Redirection en cours ... </h5>";
             await this.delay(1500);
             this.dismiss()
             return result[0] 
@@ -69,9 +68,9 @@ export class modalConnexion {
             // on enleve le loader le chargement est finit
             loader.dismiss();  
             if(err.status == 401) {
-                this.resultatConnexion="<h5> Connexion échouée ! Identifiant et/ou mot de passe incorrect.</h5>";
+                this.resultatEnregistrement="<h5> Enregistrement échoué ! Identifiant et/ou mot de passe incorrect.</h5>";
             } else {
-                this.resultatConnexion="<h5> Erreur innatendue ! Veuillez réessayer.</h5>";
+                this.resultatEnregistrement="<h5> Erreur innatendue ! Veuillez réessayer.</h5>";
             }
                 return err
         }) 

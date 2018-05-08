@@ -15,6 +15,7 @@ import { StatusBar } from '@ionic-native/status-bar';
 import { SplashScreen } from '@ionic-native/splash-screen';
 import { QRScanner } from '@ionic-native/qr-scanner';
 import { modalConnexionModule } from '../pages/connexion/modalConnexion.module';
+import { modalEnregistrementModule } from '../pages/enregistrement/modalEnregistrement.module';
 
 import { HttpClientModule } from '@angular/common/http'
 
@@ -35,7 +36,8 @@ import { IonicStorageModule } from '@ionic/storage'
     HttpClientModule,
     IonicModule.forRoot(MyApp),
     IonicStorageModule.forRoot(),
-    modalConnexionModule
+    modalConnexionModule,
+    modalEnregistrementModule
   ],
   bootstrap: [IonicApp],
   entryComponents: [
