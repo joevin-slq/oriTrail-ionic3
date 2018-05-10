@@ -55,8 +55,6 @@ export class scanManager {
     //   this.state = "started";
     // }
 
-    // Si on est en mode départ et qu'on scanne
-
     //------
     if (this.state == "before") {
       // on attend un QRcode config
@@ -78,7 +76,7 @@ export class scanManager {
       //it's a beacon QR or a stop QR
       if (this.isQRStop(info)) {
         // if it's a QR stop
-        if (this.mode == "P") {
+        if (this.mode == "I") {
           //TODO enregistrer la position GPS de la balise stop
         }
         this.stopScanning();
@@ -112,17 +110,22 @@ export class scanManager {
     this.state = "ended";
   }
 
+  public cancelRun(){
+    console.log("cancelCourse(); function not implemented. ")
+    //TODO implementer cette fonction qui ferme le scanManager et qui revien au menu principal.
+  }
+
   private isQRConfig(QRCode: object) {
-    //TODO return true if the QR code is a config QRcode, false insted
+    //TODO return true if the QR code is a config QRcode, false instead
     //TODO On doit vérifier que tout les champs soit bien présent pour éviter de prendre des erreurs
   }
 
   private isQRStart(QRCode: object) {
-    //TODO return true if the QR code is a start QRcode, false insted
+    //TODO return true if the QR code is a start QRcode, false instead
     //TODO Le
   }
 
   private isQRStop(QRCode: object) {
-    //TODO return true if the QR code is a stop QRcode, false insted
+    //TODO return true if the QR code is a stop QRcode, false instead
   }
 }
