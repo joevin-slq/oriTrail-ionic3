@@ -17,8 +17,14 @@ export class scanManager {
   /**
    *
    */
-  public state: string = "before"; //different possible states: before(on attend un QR config), ready(on attend un QRstart), started(On attend un QRbeacon ou un QRstop), ended, error. en fonction du "state" on affiche la div qui correspond
-  private infoConfig; // contient toutes les infos du QR code config
+  //different possible states: 
+  // before(on attend un QR config)
+  // ready(on attend un QRstart) 
+  // started(On attend un QRbeacon ou un QRstop)
+  // ended, error. en fonction du "state" on affiche la div qui correspond
+  public state: string = "before"; 
+  // contient toutes les infos du QR code config
+  private infoConfig; 
   private eventsManager: Events;
 
   constructor(
@@ -33,7 +39,7 @@ export class scanManager {
       this.handleScannedQR(qrcode);
     });
   }
-
+  
   public displayCamera(): boolean {
     return !(this.state == "before" || this.state == "ended");
   }
@@ -45,15 +51,7 @@ export class scanManager {
     let info: object = JSON.parse(event);
     console.log(JSON.stringify(info));
 
-    // Si on vient de scanner une balise de configuration
-    // (le champs type est présent seulement dans cette balise)
-    // if (info["type"] != null) this.storage.set("course_nom", info["nom"]);
-    // this.storage.set("course_type", info["type"]);
-
-    // // Si on est en mode configuration et qu'on scanne une balise de départ
-    // if (this.state == "ready" && info["id"] != "") {
-    //   this.state = "started";
-    // }
+    
 
     //------
     if (this.state == "before") {
@@ -62,6 +60,7 @@ export class scanManager {
         this.infoConfig = info; // all
         //TODO on doit récupérer le mode de la course si on est en mode course sinon on met "i" dans mode
         //this.mode = i';
+        
         this.state = "ready";
       } else {
         console.log("error, it's not the good QR. -> " + JSON.stringify(info));
@@ -84,7 +83,7 @@ export class scanManager {
         // if it's a QR Config
         if (this.mode == "P") {
           // si on est en pas en mode parcours on tiens compte de l'ordre
-          //TODO vérifier que c'est bien celui qu'on attendait
+          // TODO vérifier que c'est bien celui qu'on attendait
           if (this.isQRStop(info)) {
             this.stopScanning();
           }
@@ -110,22 +109,50 @@ export class scanManager {
     this.state = "ended";
   }
 
+  public cancelScanning() {
+    this.eventsManager.publish("scanManager:stopScanning");
+    this.state = "before";
+  }
+
   public cancelRun(){
     console.log("cancelCourse(); function not implemented. ")
     //TODO implementer cette fonction qui ferme le scanManager et qui revien au menu principal.
   }
 
   private isQRConfig(QRCode: object) {
-    //TODO return true if the QR code is a config QRcode, false instead
-    //TODO On doit vérifier que tout les champs soit bien présent pour éviter de prendre des erreurs
+    //TODO return true if the QR code is a config QRcode, false instead 
+
+    // Si on vient de scanner une balise de configuration
+    // (le champs type est présent seulement dans cette balise)
+    if (QRCode["type"] != null
+      && QRCode["id"] != null
+      && QRCode["nom"] != null
+      && QRCode["deb"] != null
+      && QRCode["fin"] != null
+      && QRCode["bals"] != null) {
+        // on s'assure que (dépendemment du type de course) on a bien les informations nécessaires
+        if(QRCode["type"] == 'S' && QRCode["timp"] != null) {
+          return true;
+        } else if (QRCode["type"] == 'P' && QRCode["pnlt"] != null) {
+          return true;
+        } 
+    }
+    // il manque des informations donc ... => 
+    return false;
+
   }
 
   private isQRStart(QRCode: object) {
-    //TODO return true if the QR code is a start QRcode, false instead
-    //TODO Le
+    if(QRCode["num"] == "1" && QRCode["nom"] == "Start") {
+      return true;
+    } // else
+    return false;
   }
 
   private isQRStop(QRCode: object) {
-    //TODO return true if the QR code is a stop QRcode, false instead
+    if(QRCode["num"] == "1" && QRCode["nom"] == "Start") {
+      return true;
+    } // else
+    return false;
   }
 }
