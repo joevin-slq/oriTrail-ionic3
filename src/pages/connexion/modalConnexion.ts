@@ -63,33 +63,39 @@ export class modalConnexion {
 
             // TODO check si l'enregistrement de la token est effectif ou non
             this.storage.set('token', result[0].token);
+            this.storage.set('user_id', id);
+
+            
 
             // DEBUG
             console.log(result[0].status)
             console.log(result[0].token) 
-            // on enleve le loader le chargement est finit
+
+            // on enleve le loader car le chargement est finit
             loader.dismiss();
             // pour set la couleur du résultat de connexion 
             this.connexionStatus = true;
-
+            // affichage sur la vue
             this.resultatConnexion="<h5> Connexion réussie ! Redirection en cours ... </h5>";
 
             // on revient à la page courrante
             await this.delay(1500);
             this.dismiss() 
             return result[0] 
+
         }, (err) => { // on catch les erreurs potentielles
             // DEBUG
             console.log(JSON.stringify(err))
             // on enleve le loader le chargement est finit
             loader.dismiss();  
+            // pour set la couleur du résultat de connexion
+            this.connexionStatus = false;
             if(err.status == 401) {
                 this.resultatConnexion="<h5> Connexion échouée ! Identifiant et/ou mot de passe incorrect.</h5>";
                
             } else {
                 this.resultatConnexion="<h5> Erreur innatendue ! Veuillez réessayer.</h5>";
             }
-            this.connexionStatus = false;
             return err
         }) 
    
