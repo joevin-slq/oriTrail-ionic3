@@ -1,18 +1,10 @@
-<ion-header>
-  <ion-navbar>
-    <button ion-button menuToggle>
-      <ion-icon name="menu"></ion-icon>
-    </button>
-    <ion-title>QRCoder scanner</ion-title>
-  </ion-navbar>
-</ion-header>
 
 <!-- camera scan QRcode -->
 <ion-content [class.scanning]="displayCamera()" padding>
 
   <!-- state -> before -->
-  <div *ngIf="state == 'before'" [ngSwitch]="(this.mode == 'I')">
-    <div *ngSwitchCase="false">
+  <div *ngIf="state == 'before'" [ngSwitch]="this.mode">
+    <div *ngSwitchCase="'C'">
       <h1>Participer à une course</h1>
       <p style="text-align: justify;">
         Pour participer à une course, vous devez disposer d'un QR code de configuration.
@@ -20,7 +12,7 @@
         <br/> Munissez vous du Qr code de configuration puis cliquer sur "Commencer"
       </p>
     </div>
-    <div *ngSwitchCase="true">
+    <div *ngSwitchCase="'I'">
       <h1>Installation de la course</h1>
       <p style="text-align: justify;">
         Pour installer une course vous devez vous munir du QR code de configuration de la course correspondante.
@@ -32,13 +24,14 @@
     <div style="text-align: center">
       <button ion-button (click)="startScanning()">Commencer</button>
 
-      <button ion-button (click)="cancelRun()">Annuler</button>
+      <button ion-button (click)="backToMainMenu()">Annuler</button>
     </div>
   </div>
 
 
    <!-- state -> ready -->
   <div *ngIf="state == 'ready'">
+    <!-- mdr tu connais pas les class css toi ? -->
     <h1 style="text-shadow: 1px 0px 0 white, 0 1px 0 white, 0 -1px 0 white, -1px 0 0 white, 1px 1px 0 white, 1px -1px 0 white, -1px 1px 0 white, -1px -1px 0 white;">Scannez le QR Code de configuration</h1>
     <button  block style="padding:15px;" ion-button (click)="cancelScanning()"> Annuler le scan </button>
   </div>

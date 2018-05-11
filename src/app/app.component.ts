@@ -1,42 +1,29 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild } from "@angular/core";
 
-import { Platform, MenuController, Nav } from 'ionic-angular';
+import { Platform, NavController } from "ionic-angular";
 
-import { AccueilPage } from '../pages/accueil/accueil';
-import { ListPage } from '../pages/list/list';
-import { scanManager } from '../pages/scanManager/scanManager';
-import { JsonTestPage } from '../pages/jsonTest/jsonTest';
+import { AccueilPage } from "../pages/accueil/accueil";
 
-import { StatusBar } from '@ionic-native/status-bar';
-import { SplashScreen } from '@ionic-native/splash-screen';
-
-
+import { StatusBar } from "@ionic-native/status-bar";
+import { SplashScreen } from "@ionic-native/splash-screen";
 
 @Component({
-  templateUrl: 'app.html'
+  templateUrl: "app.html"
 })
 export class MyApp {
-  @ViewChild(Nav) nav: Nav;
+  @ViewChild("nav") nav: NavController;
 
   // make HelloIonicPage the root (or first) page
   rootPage = AccueilPage;
-  pages: Array<{title: string, component: any}>;
+  pages: Array<{ title: string; component: any }>;
 
   constructor(
     public platform: Platform,
-    public menu: MenuController,
     public statusBar: StatusBar,
     public splashScreen: SplashScreen
   ) {
     this.initializeApp();
 
-    // set our app's pages
-    this.pages = [
-      { title: 'Accueil', component: AccueilPage },
-      { title: 'My First List', component: ListPage },
-      { title: 'Débuter une course', component: scanManager},
-      { title: 'Json Test', component: JsonTestPage}
-    ];
   }
 
   initializeApp() {
@@ -45,17 +32,14 @@ export class MyApp {
       // Here you can do any higher level native things you might need.
       // Load QR Code plugins
       // Optionally request the permission early
-      // Optionally request the permission early
 
       // default
-      this.statusBar.styleDefault();
+      this.statusBar.styleBlackTranslucent();
       this.splashScreen.hide();
     });
   }
 
   openPage(page) {
-    // close the menu when clicking a link from the menu
-    this.menu.close();
     // navigate to the new page if it is not the current page
     this.nav.setRoot(page.component);
   }

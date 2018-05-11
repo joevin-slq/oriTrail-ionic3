@@ -1,10 +1,9 @@
-import { Component, Input } from "@angular/core";
+import { Component } from "@angular/core";
 import { Events } from "ionic-angular";
 import { Storage } from "@ionic/storage";
 import { Geolocation } from "@ionic-native/geolocation";
-import { Platform } from "ionic-angular";
+import { Platform, NavController, NavParams } from "ionic-angular";
 import { Service } from "../../utils/services";
-import { NavController } from 'ionic-angular';
 
 declare var AdvancedGeolocation: any;
 
@@ -14,40 +13,41 @@ declare var AdvancedGeolocation: any;
 })
 export class scanManager {
 
-  // si on quitte la vue on s'assure que l'on quitte la preview de la caméra également
-  ionViewDidLeave() {
-    this.stopScanning();
-  }
-
-
-  @Input() mode: string; // valeur possible: 'I' installation, 'C' course
 
   /**
    *
    */
-  //different possible states: 
+  //different possible states:
   // before(on attend un QR config)
-  // ready(on attend un QRstart) 
+  // ready(on attend un QRstart)
   // started(On attend un QRbeacon ou un QRstop)
   // ended, error. en fonction du "state" on affiche la div qui correspond
-  public state: string = "before"; 
+  public state: string = "before";
   // contient toutes les infos du QR code config
-  private infoConfig; 
+  private infoConfig;
+  public mode: string; // valeur possible: 'I' installation, 'C' course
   private eventsManager: Events;
+  private backButtonUnregister: Function;
 
   constructor(
     events: Events,
     public storage: Storage,
     public service: Service,
+    public navCtrl: NavController,
+    public navParams: NavParams,
     private platform: Platform
   ) {
     console.log("scanManager constructor...");
+    //get parmeters
+    this.mode = navParams.get("mode");
+
+    console.log("this.mode = ", this.mode);
     this.eventsManager = events;
     events.subscribe("qrcodescan:newqr", qrcode => {
       this.handleScannedQR(qrcode);
     });
   }
-  
+
   public displayCamera(): boolean {
     return !(this.state == "before" || this.state == "ended");
   }
@@ -59,7 +59,15 @@ export class scanManager {
     let info: object = JSON.parse(event);
     console.log(JSON.stringify(info));
 
-    
+    // Si on vient de scanner une balise de configuration
+    // (le champs type est présent seulement dans cette balise)
+    // if (info["type"] != null) this.storage.set("course_nom", info["nom"]);
+    // this.storage.set("course_type", info["type"]);
+
+    // // Si on est en mode configuration et qu'on scanne une balise de départ
+    // if (this.state == "ready" && info["id"] != "") {
+    //   this.state = "started";
+    // }
 
     //------
     if (this.state == "before") {
@@ -68,7 +76,7 @@ export class scanManager {
         this.infoConfig = info; // all
         //TODO on doit récupérer le mode de la course si on est en mode course sinon on met "i" dans mode
         //this.mode = i';
-        
+
         this.state = "ready";
       } else {
         console.log("error, it's not the good QR. -> " + JSON.stringify(info));
@@ -91,7 +99,7 @@ export class scanManager {
         // if it's a QR Config
         if (this.mode == "P") {
           // si on est en pas en mode parcours on tiens compte de l'ordre
-          // TODO vérifier que c'est bien celui qu'on attendait
+          //TODO vérifier que c'est bien celui qu'on attendait
           if (this.isQRStop(info)) {
             this.stopScanning();
           }
@@ -110,6 +118,11 @@ export class scanManager {
     console.log("startScanning()");
     this.eventsManager.publish("scanManager:startScanning");
     this.state = "ready";
+
+    //sabotage du bouton retour
+    this.backButtonUnregister = this.platform.registerBackButtonAction(() => {
+      /*Do nothing*/
+    }, 1);
   }
 
   public stopScanning() {
@@ -117,50 +130,52 @@ export class scanManager {
     this.state = "ended";
   }
 
-  public cancelScanning() {
-    this.eventsManager.publish("scanManager:stopScanning");
-    this.state = "before";
-  }
+  public backToMainMenu() {
+    this.stopScanning();
 
-  public cancelRun(){
-    console.log("cancelCourse(); function not implemented. ")
-    //TODO implementer cette fonction qui ferme le scanManager et qui revien au menu principal.
+    if (this.backButtonUnregister != undefined) {
+      this.backButtonUnregister();
+    }
+    this.state = "before"; // seems useless
+
+    this.navCtrl.pop();
   }
 
   private isQRConfig(QRCode: object) {
-    //TODO return true if the QR code is a config QRcode, false instead 
+    //TODO return true if the QR code is a config QRcode, false instead
+    //TODO On doit vérifier que tout les champs soit bien présent pour éviter de prendre des erreurs
 
     // Si on vient de scanner une balise de configuration
     // (le champs type est présent seulement dans cette balise)
     if (QRCode["type"] != null
-      && QRCode["id"] != null
-      && QRCode["nom"] != null
-      && QRCode["deb"] != null
-      && QRCode["fin"] != null
-      && QRCode["bals"] != null) {
-        // on s'assure que (dépendemment du type de course) on a bien les informations nécessaires
-        if(QRCode["type"] == 'S' && QRCode["timp"] != null) {
-          return true;
-        } else if (QRCode["type"] == 'P' && QRCode["pnlt"] != null) {
-          return true;
-        } 
-    }
-    // il manque des informations donc ... => 
-    return false;
-
+    && QRCode["id"] != null
+    && QRCode["nom"] != null
+    && QRCode["deb"] != null
+    && QRCode["fin"] != null
+    && QRCode["bals"] != null) {
+      // on s'assure que (dépendemment du type de course) on a bien les informations nécessaires
+      if(QRCode["type"] == 'S' && QRCode["timp"] != null) {
+        return true;
+      } else if (QRCode["type"] == 'P' && QRCode["pnlt"] != null) {
+        return true;
+      }
   }
+  // il manque des informations donc ... =>
+  return false;
 
-  private isQRStart(QRCode: object) {
-    if(QRCode["num"] == "1" && QRCode["nom"] == "Start") {
-      return true;
-    } // else
-    return false;
-  }
+}
 
-  private isQRStop(QRCode: object) {
-    if(QRCode["num"] == "1" && QRCode["nom"] == "Start") {
-      return true;
-    } // else
-    return false;
-  }
+private isQRStart(QRCode: object) {
+  if(QRCode["num"] == "1" && QRCode["nom"] == "Start") {
+    return true;
+  } // else
+  return false;
+}
+
+private isQRStop(QRCode: object) {
+  if(QRCode["num"] == "1" && QRCode["nom"] == "Start") {
+    return true;
+  } // else
+  return false;
+}
 }
