@@ -71,7 +71,8 @@ import { Subscription } from 'rxjs/Subscription';
       if(this.scanSubscription != undefined){
         this.scanSubscription.unsubscribe(); // stop scanning
       }
-
+      // cf startScanning (on enleve la cameraView (preview))
+      window.document.querySelector('ion-app').classList.remove('cameraView')
       console.log("scan stopped");
 
       //la camera continue de tourner quand meme donc on détruit l'objet

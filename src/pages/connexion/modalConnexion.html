@@ -10,7 +10,7 @@
   </ion-header>
   
   
-  <ion-content padding>
+  <ion-content padding class=".connexion">
      
     <p> Veuillez entrer vos identifiants : </p>
     <form (ngSubmit)="loginApi()">
@@ -26,6 +26,6 @@
         <button ion-button type="submit" block>Se connecter</button>
     </form>
     <hr/>
-    <div [innerHtml]="resultatConnexion" style="color:darkgreen;"></div> 
+    <div [style.color]="getConnexionStatusColor()" [innerHtml]="resultatConnexion"></div> 
   
   </ion-content>

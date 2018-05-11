@@ -4,6 +4,7 @@ import { Storage } from "@ionic/storage";
 import { Geolocation } from "@ionic-native/geolocation";
 import { Platform } from "ionic-angular";
 import { Service } from "../../utils/services";
+import { NavController } from 'ionic-angular';
 
 declare var AdvancedGeolocation: any;
 
@@ -12,6 +13,13 @@ declare var AdvancedGeolocation: any;
   templateUrl: "scanManager.html"
 })
 export class scanManager {
+
+  // si on quitte la vue on s'assure que l'on quitte la preview de la caméra également
+  ionViewDidLeave() {
+    this.stopScanning();
+  }
+
+
   @Input() mode: string; // valeur possible: 'I' installation, 'C' course
 
   /**
