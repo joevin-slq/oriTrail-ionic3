@@ -11,16 +11,31 @@
 <ion-content [class.scanning]="displayCamera()" padding>
 
   <!-- state -> before -->
-  <div *ngIf="state == 'before'" >
-    <h1>Installation de la course</h1>
-    <p style="text-align: justify;">
-      Pour commencer une course veuillez scanner le QRcode de configuration.<br/><br/>
-      Pour cela cliquer sur "Commencer"
-    </p>
+  <div *ngIf="state == 'before'" [ngSwitch]="(this.mode == 'I')">
+    <div *ngSwitchCase="false">
+      <h1>Participer à une course</h1>
+      <p style="text-align: justify;">
+        Pour participer à une course, vous devez disposer d'un QR code de configuration.
+        <br/>
+        <br/> Munissez vous du Qr code de configuration puis cliquer sur "Commencer"
+      </p>
+    </div>
+    <div *ngSwitchCase="true">
+      <h1>Installation de la course</h1>
+      <p style="text-align: justify;">
+        Pour installer une course vous devez vous munir du QR code de configuration de la course correspondante.
+        <br/>
+        <br/> Munissez vous du Qr code de configuration puis cliquer sur "Commencer"
+      </p>
+    </div>
+
     <div style="text-align: center">
-      <button  style="background-color: blue;" ion-button (click)="startScanning()">Commencer</button>
+      <button style="background-color: blue;" ion-button (click)="startScanning()">Commencer</button>
+
+      <button style="background-color: blue;" ion-button (click)="cancelRun()">Annuler</button>
     </div>
   </div>
+
 
    <!-- state -> ready -->
    <div *ngIf="state == 'ready'">
@@ -28,20 +43,41 @@
   </div>
 
   <!-- state -> started -->
-  <div *ngIf="state == 'started'">
-    <h1>Scannez le QR Code de départ</h1>
+  <div *ngIf="state == 'started'" [ngSwitch]="(this.mode == 'I')">
+    <!-- case Course -->
+    <div *ngSwitchCase="false">
+      <!-- mode parcours -->
+      <h1>Scannez les balises de la course dans l'orde</h1>
+      <!-- mode score -->
+      <h1>Scannez les balises de la course</h1>
+    </div>
+    <!-- case Installation -->
+    <div *ngSwitchCase="true">
+      <h1>installation de la course</h1>
+      <p>Placer les balises sur le parcours. Scanner les dans l'ordre que vous voulez pour enregistrer leurs positions respectives</p>
+    </div>
+
   </div>
 
   <!-- state -> ended -->
-  <div *ngIf="state == 'ended'">
-    <h1>Fin</h1>
-    <p>
-      Vous avez terminer l'installation de la courses, il faut maintenant vous connecter à internet pour envoyer les données au serveur.
-    </p>
+  <div *ngIf="state == 'ended'" [ngSwitch]="(this.mode == 'I')">
+    <!-- case Course -->
+    <div *ngSwitchCase="false">
+      <h1>Arrivée</h1>
+      <p>
+        Félicitation, vous avez terminer la course. Il faut maintenant vous connecter à internet pour publier votre résultat.
+      </p>
+    </div>
+    <!-- case Installation -->
+    <div *ngSwitchCase="true">
+      <h1>Fin de l'installation</h1>
+      <p>
+        Vous avez terminer l'installation de la courses, il faut maintenant vous connecter à internet pour envoyer les données au
+        serveur.
+      </p>
+    </div>
   </div>
 
   <qrcodescan [hidden]="!displayCamera()"></qrcodescan>
 
 </ion-content>
-
-
