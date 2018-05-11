@@ -20,8 +20,7 @@ import { modalEnregistrementModule } from '../pages/enregistrement/modalEnregist
 
 import { HttpClientModule } from '@angular/common/http'
 import { Geolocation } from '@ionic-native/geolocation';
-import { IonicStorageModule } from '@ionic/storage' 
-import { GpsProvider } from '../providers/gps/gps';
+import { IonicStorageModule } from '@ionic/storage'  
 
 import { Service } from '../utils/services'
 
@@ -58,8 +57,7 @@ import { Service } from '../utils/services'
     SplashScreen,
     {provide: ErrorHandler, useClass: IonicErrorHandler},
     QRScanner,
-    Geolocation, 
-    GpsProvider,
+    Geolocation,  
     Service
   ]
 })
