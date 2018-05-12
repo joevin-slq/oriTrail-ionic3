@@ -30,9 +30,8 @@
 
 
    <!-- state -> ready -->
-  <div *ngIf="state == 'ready'">
-    <!-- mdr tu connais pas les class css toi ? -->
-    <h1 style="text-shadow: 1px 0px 0 white, 0 1px 0 white, 0 -1px 0 white, -1px 0 0 white, 1px 1px 0 white, 1px -1px 0 white, -1px 1px 0 white, -1px -1px 0 white;">Scannez le QR Code de configuration</h1>
+  <div *ngIf="state == 'ready'"> 
+    <h1 class="contourBlanc">Scannez le QR Code de configuration</h1>
     <button  block style="padding:15px;" ion-button (click)="cancelScanning()"> Annuler le scan </button>
   </div>
 

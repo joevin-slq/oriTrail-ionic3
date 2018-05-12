@@ -58,25 +58,16 @@ export class scanManager {
     // on parse les données reçu du QRCode
     let info: object = JSON.parse(event);
     console.log(JSON.stringify(info));
-
-    // Si on vient de scanner une balise de configuration
-    // (le champs type est présent seulement dans cette balise)
-    // if (info["type"] != null) this.storage.set("course_nom", info["nom"]);
-    // this.storage.set("course_type", info["type"]);
-
-    // // Si on est en mode configuration et qu'on scanne une balise de départ
-    // if (this.state == "ready" && info["id"] != "") {
-    //   this.state = "started";
-    // }
+ 
 
     //------
     if (this.state == "before") {
       // on attend un QRcode config
       if (this.isQRConfig(info)) {
-        this.infoConfig = info; // all
-        //TODO on doit récupérer le mode de la course si on est en mode course sinon on met "i" dans mode
-        //this.mode = i';
-
+        console.log("Configuration QRCode scanned")
+        // sauvegarde des données de la course 
+        this.infoConfig = info; 
+        // passage en état ready
         this.state = "ready";
       } else {
         console.log("error, it's not the good QR. -> " + JSON.stringify(info));
@@ -130,6 +121,11 @@ export class scanManager {
     this.state = "ended";
   }
 
+  public cancelScanning() {
+    this.eventsManager.publish("scanManager:stopScanning");
+    this.state = "before";
+  }
+
   public backToMainMenu() {
     this.stopScanning();
 
@@ -173,7 +169,10 @@ private isQRStart(QRCode: object) {
 }
 
 private isQRStop(QRCode: object) {
-  if(QRCode["num"] == "1" && QRCode["nom"] == "Start") {
+
+  let nombreDeBalise = Object.keys(this.infoConfig["bals"]).length
+
+  if(QRCode["num"] == nombreDeBalise /* -1 ? */) {
     return true;
   } // else
   return false;
