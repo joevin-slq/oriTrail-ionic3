@@ -94,8 +94,6 @@ export class scanManager {
         this.infoConfig["bals"][0] = { nom: "Start" }
         this.infoConfig["bals"][Object.keys(this.infoConfig["bals"]).length] = { nom: "End" }
 
-        this.updateBalisePosition(2);
-
         console.log("CONF AVEC START/END : " + JSON.stringify(this.infoConfig["bals"]))
         if (this.mode == "I") {
           // si on est en mode installation on passe directement en mode started
