@@ -22,7 +22,7 @@ export class scanManager {
   // ended, error. en fonction du "state" on affiche la div qui correspond
   public state: string = "before";
   // contient toutes les infos du QR code config
-  private infoConfig= JSON.parse('{"nom":"La ruthénoise","id":1,"type":"S","deb":"2018-05-05 08:00:00","fin":"2018-08-05 18:00:00","timp":"02:00:00","bals":{"1":{"nom":"CP1","val":"100"},"2":{"nom":"CP2","val":"50"}}}') ;
+  private infoConfig;
   public mode: string; // valeur possible: 'I' installation, 'C' course
   public score = 0;
 
@@ -30,7 +30,7 @@ export class scanManager {
   private backButtonUnregister: Function;
 
   constructor(
-    private geolocation: Geolocation, 
+    private geolocation: Geolocation,
     private uptime: Uptime,
     events: Events,
     public storage: Storage,
@@ -54,7 +54,6 @@ export class scanManager {
     this.zone.run(() => {
       //run the code that should update the view
     });
-    this.updateBaliseTimeScan(2)
 
   }
 
@@ -68,15 +67,15 @@ export class scanManager {
     // on parse les données reçu du QRCode
     let info: object = JSON.parse(event);
     //console.log(JSON.stringify(info));
- 
+
 
     // à partir du moment ou on à scanner un QR config on prend plus que des QR codes de la course correspondante
     let isQRValid: boolean = true;
-    if(this.state != 'config'){
-      if(info['id_course'] == this.infoConfig['id']){
+    if (this.state != 'config') {
+      if (info['id_course'] == this.infoConfig['id']) {
         isQRValid = true;
-      }else{
-        isQRValid = false; 
+      } else {
+        isQRValid = false;
         let toast = this.toastCtrl.create({
           message: `Ce QR code ne provient d'une autre course`,
           showCloseButton: false
@@ -87,18 +86,24 @@ export class scanManager {
 
     //
     if (this.state == "config") {
-      // si on a rien scanner,
-      //TODO vérifier que c'est un QRconfig et l'enregistrer en variable
-      console.log("on vient de scanner le QR config");
-      this.infoConfig = info;
-      if (this.mode == "I") {
-        // si on est en mode installation on passe directement en mode started
-        this.state = "started";
-        console.log("on est en mode installation")
-      } else {
-        // sinon  on passe en mode ready
-        this.state = "ready";
-        console.log("on est en mode course")
+      if (this.isQRConfig(info)) {
+        // si on a rien scanner, 
+        console.log("on vient de scanner le QR config");
+        this.infoConfig = info; 
+        // on ajoute les balises de démarrage et de fin
+        this.infoConfig["bals"][0] = {nom: "Start"} 
+        this.infoConfig["bals"][Object.keys(this.infoConfig["bals"]).length] = {nom: "End"}
+ 
+        console.log("CONF AVEC START/END : " + JSON.stringify(this.infoConfig["bals"]))
+        if (this.mode == "I") {
+          // si on est en mode installation on passe directement en mode started
+          this.state = "started";
+          console.log("on est en mode installation")
+        } else {
+          // sinon  on passe en mode ready
+          this.state = "ready";
+          console.log("on est en mode course")
+        }
       }
     } else if (this.state == "ready") {
       // on passe dans ce cas seulement si on est en mode course
@@ -206,12 +211,7 @@ export class scanManager {
 
   private isQRStop(QRCode: object): boolean {
     //TODO vérifier que ce soit le QR correspondant à la bonne course
-    let nombreDeBalise = Object.keys(this.infoConfig["bals"]).length;
-
-    if (QRCode["num"] == nombreDeBalise /* -1 ? */) {
-      return true;
-    } // else
-    return false;
+    return this.isEndBalise(QRCode["num"])
   }
   private allQRScanned() {
     //TODO comparer les balise à scanner et les balise scanné
@@ -242,26 +242,40 @@ export class scanManager {
    * Ajoute à l'objet infoConfig le temps de la balise indiquée (dans un champs temps)
    * @param idBalise l'id de la balise dans la liste
    */
-  private async updateBaliseTimeScan(idBalise: number) { 
+  private async updateBaliseTimeScan(idBalise: number) {
     let uptimeLocal;
     // ne pas tenir compte de l'erreur Visual Studio
     await this.uptime.getUptime(true).then(
-      function(uptime) {
-        uptimeLocal = uptime;  
+      function (uptime) {
+        uptimeLocal = uptime;
       }
     ).catch(
-      function(error) { 
+      function (error) {
         uptimeLocal = "nothing"
       }
     );
-    
-    // on ajoute l'uptime actuel à l'id de la balise passée en param
+
     this.infoConfig["bals"][idBalise]["temps"] = uptimeLocal
+ 
+     // DEBUG
     console.log(JSON.stringify(this.infoConfig))
     console.log(uptimeLocal)
+ 
+  }
 
+  /**
+   * Détermine si l'id de la balise passée est l'id de la dernière balise ou non (end)
+   * @param idBalise l'id de la balise à tester
+   */
+  private isEndBalise(idBalise: number) {
+    let nombreDeBalise = Object.keys(this.infoConfig["bals"]).length;
 
+    // +1 car on a nombre de balise - 2 dans notre config
+    if (idBalise == nombreDeBalise + 1) {
+      return true;
+    } // else
+    return false;
   }
 }
- 
- 
+
+
