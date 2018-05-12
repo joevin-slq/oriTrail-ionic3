@@ -5,24 +5,27 @@
 </ion-header>
 
 
-<ion-content padding>
-
-  <h3>Oritrail!</h3>
-
-  <p>
-    Bienvenu sur la page d'accueil d'Oritrail.
-  </p> 
+<ion-content padding class="accueil">
+  <div class="user">
 
   <h3>Espace course</h3>
-  <div style="text-align: center"> 
-    <button ion-button (click)="installerCourse()">Installer une course</button>
-    <button ion-button (click)="participerCourse()">Participer à une course</button>
+    <p>afficher ici si des données sont en attente d'envoi</p>
+    <p>
+      <button ion-button (click)="seconnecter()">Se connecter</button>
+      <button ion-button (click)="sinscrire()">S'enregistrer</button>
+    </p>
   </div>
-  
-  <h3>Espace membre</h3>
-  <div style="text-align: center">
-    <button ion-button (click)="seconnecter()">Se connecter</button>
-    <button ion-button (click)="sinscrire()">S'enregistrer</button>
+  <div class="run">
+      <h3>Espace membre</h3>
+    <p>
+      Bienvenu sur la page d'accueil d'Oritrail
+    </p>
+    <p>
+      TODO Description app
+    </p>
+    <p>
+      <button ion-button (click)="installerCourse()">Installer une course</button>
+      <button ion-button (click)="participerCourse()">Participer à une course</button>
+    </p>
   </div>
 
-</ion-content>
