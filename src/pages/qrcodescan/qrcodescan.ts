@@ -1,4 +1,4 @@
-  import { Component } from '@angular/core';
+  import { Component, NgZone } from '@angular/core';
   import { QRScanner, QRScannerStatus } from '@ionic-native/qr-scanner';
   import { Events } from 'ionic-angular'
 import { Subscription } from 'rxjs/Subscription';
@@ -12,10 +12,13 @@ import { Subscription } from 'rxjs/Subscription';
 
     private scanSubscription: Subscription;
 
-    constructor(private qrScanner : QRScanner, private events: Events) {
+    constructor(private qrScanner : QRScanner, private events: Events, public zone: NgZone) {
       console.log("qrCodeScan constructor...");
       events.subscribe("scanManager:stopScanning", ()=>{this.stopScanning()});
       events.subscribe("scanManager:startScanning", ()=>{this.startScanning()});
+      this.zone.run(() => {
+        //run the code that should update the view
+      });
     }
 
     /**

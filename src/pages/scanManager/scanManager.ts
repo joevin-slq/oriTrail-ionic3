@@ -4,8 +4,8 @@ import { Storage } from "@ionic/storage";
 import { Geolocation } from "@ionic-native/geolocation";
 import { Platform, NavController, NavParams } from "ionic-angular";
 import { Service } from "../../utils/services";
-import { ToastController } from 'ionic-angular';
-import { Uptime } from '@ionic-native/uptime';
+import { ToastController } from "ionic-angular";
+import { Uptime } from "@ionic-native/uptime";
 
 @Component({
   selector: "scanManager",
@@ -49,12 +49,7 @@ export class scanManager {
     this.eventsManager = events;
     events.subscribe("qrcodescan:newqr", qrcode => {
       this.handleScannedQR(qrcode);
-
     });
-    this.zone.run(() => {
-      //run the code that should update the view
-    });
-
   }
 
   public displayCamera(): boolean {
@@ -62,85 +57,93 @@ export class scanManager {
   }
 
   public handleScannedQR(event) {
-    //une balise à été scannée, on la gère ici
-    //console.log("handleScannedQR() -> " + event);
-    // on parse les données reçu du QRCode
-    let info: object = JSON.parse(event);
-    //console.log(JSON.stringify(info));
+    this.zone.run(() => {
+      //run the code that should update the view
 
+      //une balise à été scannée, on la gère ici
+      //console.log("handleScannedQR() -> " + event);
+      // on parse les données reçu du QRCode
+      let info: object = JSON.parse(event);
+      //console.log(JSON.stringify(info));
 
-    // à partir du moment ou on à scanner un QR config on prend plus que des QR codes de la course correspondante
-    let isQRValid: boolean = true;
-    if (this.state != 'config') {
-      if (info['id_course'] == this.infoConfig['id']) {
-        isQRValid = true;
-      } else {
-        isQRValid = false;
-        let toast = this.toastCtrl.create({
-          message: `Ce QR code ne provient d'une autre course`,
-          showCloseButton: false
-        });
-        toast.present();
-      }
-    }
-
-    //
-    if (this.state == "config") {
-      if (this.isQRConfig(info)) {
-        // si on a rien scanner, 
-        console.log("on vient de scanner le QR config");
-        this.infoConfig = info;
-        // on ajoute les balises de démarrage et de fin
-        this.infoConfig["bals"][0] = { nom: "Start" }
-        this.infoConfig["bals"][Object.keys(this.infoConfig["bals"]).length] = { nom: "End" }
-
-        console.log("CONF AVEC START/END : " + JSON.stringify(this.infoConfig["bals"]))
-        if (this.mode == "I") {
-          // si on est en mode installation on passe directement en mode started
-          this.state = "started";
-          console.log("on est en mode installation")
+      // à partir du moment ou on à scanner un QR config on prend plus que des QR codes de la course correspondante
+      let isQRValid: boolean = true;
+      if (this.state != "config") {
+        if (info["id_course"] == this.infoConfig["id"]) {
+          isQRValid = true;
         } else {
-          // sinon  on passe en mode ready
-          this.state = "ready";
-          console.log("on est en mode course")
+          isQRValid = false;
+          let toast = this.toastCtrl.create({
+            message: `Ce QR code ne provient d'une autre course`,
+            showCloseButton: false
+          });
+          toast.present();
         }
       }
-    } else if (this.state == "ready") {
-      // on passe dans ce cas seulement si on est en mode course
-      if (this.isQRStart(info)) {
-        this.state = "started";
-        //TODO lancer le chrono
-        console.log('top départ');
-      }
-    } else if (this.state == "started") {
-      if (this.mode == "I") {
-        console.log("on viens de scanner un QR durant l'installation");
-        //On viens de scanner une balise,
-        //TODO enregistrer la position GPS correspondannt à cette balise
-        //on enregistre la position GPS de la balise ( à coder sous forme de fonction générique + dans cette fonction si toutes les balise on été scannées on arrete l’appareil photo et on tente d’envoyer le résultat)
-        this.addQR(info);
-        if (this.allQRScanned()) {
-          this.backToMainMenu();
-        }
-      } else {
-        //on est en mode course
-        if (this.isQRStop(info)) {
-          this.backToMainMenu();
-        }
-        if (this.infoConfig["type"] == "S") {
-          // course en type score
 
-          if (this.addQR(info)) {
-            // TODO ajouter les points la balise au score total
+      //
+      if (this.state == "config") {
+        if (this.isQRConfig(info)) {
+          // si on a rien scanner,
+          console.log("on vient de scanner le QR config");
+          this.infoConfig = info;
+          // on ajoute les balises de démarrage et de fin
+          this.infoConfig["bals"][0] = { nom: "Start" };
+          //pas de balise end en course score
+          if (this.infoConfig["type"] == "P") {
+            this.infoConfig["bals"][
+              Object.keys(this.infoConfig["bals"]).length
+            ] = { nom: "End" };
+          }
+
+          console.log(
+            "CONF AVEC START/END : " + JSON.stringify(this.infoConfig["bals"])
+          );
+          if (this.mode == "I") {
+            // si on est en mode installation on passe directement en mode started
+            this.state = "started";
+            console.log("on est en mode installation");
+          } else {
+            // sinon  on passe en mode ready
+            this.state = "ready";
+            console.log("on est en mode course");
+          }
+        }
+      } else if (this.state == "ready") {
+        // on passe dans ce cas seulement si on est en mode course
+        if (this.isQRStart(info)) {
+          this.state = "started";
+          //TODO lancer le chrono
+          console.log("top départ");
+        }
+      } else if (this.state == "started") {
+        if (this.mode == "I") {
+          console.log("on viens de scanner un QR durant l'installation");
+          //On viens de scanner une balise,
+          //TODO enregistrer la position GPS correspondannt à cette balise
+          //on enregistre la position GPS de la balise ( à coder sous forme de fonction générique + dans cette fonction si toutes les balise on été scannées on arrete l’appareil photo et on tente d’envoyer le résultat)
+          this.addQR(info);
+          if (this.allQRScanned()) {
+            this.backToMainMenu();
           }
         } else {
-          // on est en mode parcours, les balises on un ordre préci
-          this.addQROrdered(info);
+          //on est en mode course
+          if (this.isQRStop(info)) {
+            this.backToMainMenu();
+          }
+          if (this.infoConfig["type"] == "S") {
+            // course en type score
+
+            if (this.addQR(info)) {
+              // TODO ajouter les points la balise au score total
+            }
+          } else {
+            // on est en mode parcours, les balises on un ordre préci
+            this.addQROrdered(info);
+          }
         }
       }
-    }
-
-
+    });
   }
 
   // TODO
@@ -159,7 +162,7 @@ export class scanManager {
    * Annule le scan en cours et va en état "end" (état de fin)
    */
   public stopScanning() {
-    console.log("stopscanning()")
+    console.log("stopscanning()");
     this.eventsManager.publish("scanManager:stopScanning");
     this.state = "ended";
   }
@@ -219,18 +222,18 @@ export class scanManager {
 
   private isQRStop(QRCode: object): boolean {
     //TODO vérifier que ce soit le QR correspondant à la bonne course
-    return this.isEndBalise(QRCode["num"])
+    return this.isEndBalise(QRCode["num"]);
   }
   private allQRScanned() {
     //TODO comparer les balise à scanner et les balise scanné
     // TODO si on à tout scanné return true sinon false
   }
 
-
   //enregistrer quel QR a été scanné et leurs positions
   private addQR(newQR: object): boolean {
     // TODO vérifier que le QR est pas déja dans la liste des QR scanné
-    // TODO si il y est pas, on le rajoute et o retourne true
+    // TODO si il y est pas, on le rajoute et on retourne true
+    this.updateBaliseTimeScan(newQR["num"]);
     // TODO sinon (si il est déja dans la liste) on retourne fasle.
     return true; // remove that
   }
@@ -253,28 +256,27 @@ export class scanManager {
   private async updateBaliseTimeScan(idBalise: number) {
     let uptimeLocal;
     // ne pas tenir compte de l'erreur Visual Studio
-    await this.uptime.getUptime(true).then(
-      function (uptime) {
+    await this.uptime
+      .getUptime(true)
+      .then(function(uptime) {
         uptimeLocal = uptime;
-      }
-    ).catch(
-      function (error) {
+        console.log("getUptime(true)");
+      })
+      .catch(function(error) {
         uptimeLocal = "erreur";
-      }
-    );
+      });
 
     // On ajoute l'uptime mais également le datetime (timestamp) du téléphone pour étaloner les futurs uptimes
-    if(idBalise == 0) {
-      this.infoConfig["bals"][0]["temps_initial"] = new Date().getTime() 
+    if (idBalise == 0) {
+      this.infoConfig["bals"][0]["temps_init"] = new Date().getTime();
     }
- 
+
     // ajout du temps à la balise
-    this.infoConfig["bals"][idBalise]["temps"] = uptimeLocal
+    this.infoConfig["bals"][idBalise]["temps"] = uptimeLocal;
 
     // DEBUG
-    console.log(JSON.stringify(this.infoConfig))
-    console.log(uptimeLocal)
-
+    console.log(uptimeLocal);
+    console.log(JSON.stringify(this.infoConfig));
   }
 
   /**
@@ -285,20 +287,23 @@ export class scanManager {
   private async updateBalisePosition(idBalise: number) {
     let position;
     // on enregistre la position GPS dans la variable position
-    await this.geolocation.getCurrentPosition().then(
-      function(resp) {
-      position = {latitude: resp.coords.latitude, longitude: resp.coords.longitude } 
-     }).catch(
-       function(error){
-       position = {erreur: error}
-     }); 
-     // ajout de la position pour la balise 
-    this.infoConfig["bals"][idBalise]["position"] = position
+    await this.geolocation
+      .getCurrentPosition()
+      .then(function(resp) {
+        position = {
+          latitude: resp.coords.latitude,
+          longitude: resp.coords.longitude
+        };
+      })
+      .catch(function(error) {
+        position = { erreur: error };
+      });
+    // ajout de la position pour la balise
+    this.infoConfig["bals"][idBalise]["position"] = position;
 
     // DEBUG
-    console.log(JSON.stringify(this.infoConfig))
-    console.log(JSON.stringify(position))
-
+    console.log(JSON.stringify(this.infoConfig));
+    console.log(JSON.stringify(position));
   }
 
   /**
@@ -316,5 +321,3 @@ export class scanManager {
     return false;
   }
 }
-
-
