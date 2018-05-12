@@ -89,11 +89,13 @@ export class scanManager {
       if (this.isQRConfig(info)) {
         // si on a rien scanner, 
         console.log("on vient de scanner le QR config");
-        this.infoConfig = info; 
+        this.infoConfig = info;
         // on ajoute les balises de démarrage et de fin
-        this.infoConfig["bals"][0] = {nom: "Start"} 
-        this.infoConfig["bals"][Object.keys(this.infoConfig["bals"]).length] = {nom: "End"}
- 
+        this.infoConfig["bals"][0] = { nom: "Start" }
+        this.infoConfig["bals"][Object.keys(this.infoConfig["bals"]).length] = { nom: "End" }
+
+        this.updateBalisePosition(2);
+
         console.log("CONF AVEC START/END : " + JSON.stringify(this.infoConfig["bals"]))
         if (this.mode == "I") {
           // si on est en mode installation on passe directement en mode started
@@ -251,16 +253,44 @@ export class scanManager {
       }
     ).catch(
       function (error) {
-        uptimeLocal = "nothing"
+        uptimeLocal = "0";
       }
     );
 
+    if(uptimeLocal == "0") {
+      // TODO gérer convenable ce type d'erreur ...
+      alert("Erreur pour récupérer le temps du téléphone")
+    }
+
     this.infoConfig["bals"][idBalise]["temps"] = uptimeLocal
- 
-     // DEBUG
+
+    // DEBUG
     console.log(JSON.stringify(this.infoConfig))
     console.log(uptimeLocal)
- 
+
+  }
+
+  /**
+   * Ajoute à l'objet infoConfig la position GPS prise à la volée (dans un champs position)
+   * @param idBalise 
+   */
+  private async updateBalisePosition(idBalise: number) {
+    let position;
+    // ne pas tenir compte de l'erreur Visual Studio
+    await this.geolocation.getCurrentPosition().then(
+      function(resp) {
+      position = {latitude: resp.coords.latitude, longitude: resp.coords.longitude } 
+     }).catch(
+       function(error){
+       position = {erreur: error}
+     }); 
+
+    this.infoConfig["bals"][idBalise]["position"] = position
+
+    // DEBUG
+    console.log(JSON.stringify(this.infoConfig))
+    console.log(JSON.stringify(position))
+
   }
 
   /**
