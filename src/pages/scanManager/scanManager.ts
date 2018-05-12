@@ -143,6 +143,7 @@ export class scanManager {
 
   }
 
+  // TODO
   public startScanning() {
     console.log("startScanning()");
     this.eventsManager.publish("scanManager:startScanning");
@@ -154,17 +155,24 @@ export class scanManager {
     }, 1);
   }
 
+  /**
+   * Annule le scan en cours et va en état "end" (état de fin)
+   */
   public stopScanning() {
     console.log("stopscanning()")
     this.eventsManager.publish("scanManager:stopScanning");
     this.state = "ended";
   }
 
+  /**
+   * Annule le scan en cours et revient en état "before" (avant scan config)
+   */
   public cancelScanning() {
     this.eventsManager.publish("scanManager:stopScanning");
     this.state = "before";
   }
 
+  // TODO
   public backToMainMenu() {
     this.stopScanning();
 
@@ -251,15 +259,16 @@ export class scanManager {
       }
     ).catch(
       function (error) {
-        uptimeLocal = "0";
+        uptimeLocal = "erreur";
       }
     );
 
-    if(uptimeLocal == "0") {
-      // TODO gérer convenable ce type d'erreur ...
-      alert("Erreur pour récupérer le temps du téléphone")
+    // On ajoute l'uptime mais également le datetime (timestamp) du téléphone pour étaloner les futurs uptimes
+    if(idBalise == 0) {
+      this.infoConfig["bals"][0]["temps_initial"] = new Date().getTime() 
     }
-
+ 
+    // ajout du temps à la balise
     this.infoConfig["bals"][idBalise]["temps"] = uptimeLocal
 
     // DEBUG
@@ -270,11 +279,12 @@ export class scanManager {
 
   /**
    * Ajoute à l'objet infoConfig la position GPS prise à la volée (dans un champs position)
-   * @param idBalise 
+   * Donc la position GPS sera récupérée à l'appel de la fonction
+   * @param idBalise l'id de la balise dont on veut ajouter la position
    */
   private async updateBalisePosition(idBalise: number) {
     let position;
-    // ne pas tenir compte de l'erreur Visual Studio
+    // on enregistre la position GPS dans la variable position
     await this.geolocation.getCurrentPosition().then(
       function(resp) {
       position = {latitude: resp.coords.latitude, longitude: resp.coords.longitude } 
@@ -282,7 +292,7 @@ export class scanManager {
        function(error){
        position = {erreur: error}
      }); 
-
+     // ajout de la position pour la balise 
     this.infoConfig["bals"][idBalise]["position"] = position
 
     // DEBUG
@@ -293,6 +303,7 @@ export class scanManager {
 
   /**
    * Détermine si l'id de la balise passée est l'id de la dernière balise ou non (end)
+   * /!\ on part du principe que les balises début / fin ont bien été ajoutées à infoConfig
    * @param idBalise l'id de la balise à tester
    */
   private isEndBalise(idBalise: number) {
