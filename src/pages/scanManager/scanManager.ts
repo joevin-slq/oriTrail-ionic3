@@ -5,9 +5,7 @@ import { Geolocation } from "@ionic-native/geolocation";
 import { Platform, NavController, NavParams } from "ionic-angular";
 import { Service } from "../../utils/services";
 import { ToastController } from 'ionic-angular';
-
-
-declare var AdvancedGeolocation: any;
+import { Uptime } from '@ionic-native/uptime';
 
 @Component({
   selector: "scanManager",
@@ -26,12 +24,14 @@ export class scanManager {
   // ended, error. en fonction du "state" on affiche la div qui correspond
   public state: string = "before";
   // contient toutes les infos du QR code config
-  private infoConfig;
+  private infoConfig= JSON.parse('{"nom":"La ruthénoise","id":1,"type":"S","deb":"2018-05-05 08:00:00","fin":"2018-08-05 18:00:00","timp":"02:00:00","bals":{"1":{"nom":"CP1","val":"100"},"2":{"nom":"CP2","val":"50"}}}') ;
   public mode: string; // valeur possible: 'I' installation, 'C' course
   private eventsManager: Events;
   private backButtonUnregister: Function;
 
   constructor(
+    private geolocation: Geolocation, 
+    private uptime: Uptime,
     events: Events,
     public storage: Storage,
     public service: Service,
@@ -48,7 +48,8 @@ export class scanManager {
     this.eventsManager = events;
     events.subscribe("qrcodescan:newqr", qrcode => {
       this.handleScannedQR(qrcode);
-    });
+    });  
+    this.updateBaliseTimeScan(2)
   }
 
   public displayCamera(): boolean {
@@ -62,9 +63,9 @@ export class scanManager {
     let info: object = JSON.parse(event);
     //console.log(JSON.stringify(info));
  
-
     //------
     if (this.state == "config") {
+ 
       // on attend un QRCODE DE CONFIGURATION
       if (this.isQRConfig(info)) {
         console.log("Configuration QRCode scanned")
@@ -176,6 +177,11 @@ export class scanManager {
 
 }
 
+/**
+ * Détecte si le QRCode est un QRCode de début (start)
+ * @param QRCode le QRCode scanné
+ * @return true si c'est un QRcode de début/start ou false sinon
+ */
 private isQRStart(QRCode: object) {
   if(QRCode["num"] == "1" && QRCode["nom"] == "Start") {
     return true;
@@ -183,8 +189,13 @@ private isQRStart(QRCode: object) {
   return false;
 }
 
+/**
+ * Détecte si le QRCode est un QRCode de fin
+ * @param QRCode le QRCode scanné
+ * @return true si c'est un QRcode de stop ou false sinon
+ */
 private isQRStop(QRCode: object) {
-
+  // on récupère le nombre de balise
   let nombreDeBalise = Object.keys(this.infoConfig["bals"]).length
 
   if(QRCode["num"] == nombreDeBalise /* -1 ? */) {
@@ -192,4 +203,40 @@ private isQRStop(QRCode: object) {
   } // else
   return false;
 }
+
+private getPosition() { 
+   this.geolocation.getCurrentPosition().then((resp) => {
+    console.log(resp.coords.latitude)
+    console.log(resp.coords.longitude)
+   }).catch((error) => {
+     console.log('Error getting location', error);
+   });
 }
+ 
+/**
+ * Ajoute à l'objet infoConfig le temps de la balise indiquée (dans un champs temps)
+ * @param idBalise l'id de la balise dans la liste
+ */
+private async updateBaliseTimeScan(idBalise: number) { 
+  let uptimeLocal;
+  // ne pas tenir compte de l'erreur Visual Studio
+  await this.uptime.getUptime(true).then(
+    function(uptime) {
+      uptimeLocal = uptime;  
+    }
+  ).catch(
+    function(error) { 
+      uptimeLocal = "nothing"
+    }
+  );
+   
+  // on ajoute l'uptime actuel à l'id de la balise passée en param
+  this.infoConfig["bals"][idBalise]["temps"] = uptimeLocal
+  console.log(JSON.stringify(this.infoConfig))
+  console.log(uptimeLocal)
+
+
+}
+
+}
+

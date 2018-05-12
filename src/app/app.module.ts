@@ -23,6 +23,7 @@ import { Geolocation } from '@ionic-native/geolocation';
 import { IonicStorageModule } from '@ionic/storage'
 
 import { Service } from '../utils/services'
+import { Uptime } from '@ionic-native/uptime';
 
 @NgModule({
   declarations: [
@@ -58,7 +59,8 @@ import { Service } from '../utils/services'
     {provide: ErrorHandler, useClass: IonicErrorHandler},
     QRScanner,
     Geolocation,
-    Service
+    Service,
+    Uptime
   ]
 })
 export class AppModule {
