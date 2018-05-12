@@ -4,6 +4,8 @@ import { Storage } from "@ionic/storage";
 import { Geolocation } from "@ionic-native/geolocation";
 import { Platform, NavController, NavParams } from "ionic-angular";
 import { Service } from "../../utils/services";
+import { ToastController } from 'ionic-angular';
+
 
 declare var AdvancedGeolocation: any;
 
@@ -35,7 +37,8 @@ export class scanManager {
     public service: Service,
     public navCtrl: NavController,
     public navParams: NavParams,
-    private platform: Platform
+    private platform: Platform,
+    public toastCtrl: ToastController
   ) {
     console.log("scanManager constructor...");
     //get parmeters
@@ -57,27 +60,39 @@ export class scanManager {
     //console.log("handleScannedQR() -> " + event);
     // on parse les données reçu du QRCode
     let info: object = JSON.parse(event);
-    console.log(JSON.stringify(info));
+    //console.log(JSON.stringify(info));
  
 
     //------
-    if (this.state == "before") {
-      // on attend un QRcode config
+    if (this.state == "config") {
+      // on attend un QRCODE DE CONFIGURATION
       if (this.isQRConfig(info)) {
         console.log("Configuration QRCode scanned")
         // sauvegarde des données de la course 
         this.infoConfig = info; 
         // passage en état ready
         this.state = "ready";
-      } else {
-        console.log("error, it's not the good QR. -> " + JSON.stringify(info));
+        // on indique à l'utilisateur que la configuration a bien fonctionné
+        let toast = this.toastCtrl.create({
+          message: 'QRCode de configuration bien scanné. Vous pouvez maintenant scanner le QRCode de départ 😉',
+          showCloseButton: true,
+          closeButtonText: 'Ok'
+        });
+        toast.present();
+
+      } else { 
+        // on réessaye de scanner à nouveau un QRCode 
+        this.startScanning()
+        console.log("QRCode scanné mais pas celui de configuration ...")  
       }
+      // on attend un QRCODE DE DÉPART
     } else if (this.state == "ready") {
       // on attend un qr code start
       if (this.isQRStart(info)) {
         console.log("we scanned the start QR");
         this.state = "started";
       }
+      // on attend un QRCODE DE BALISE
     } else if (this.state == "started") {
       //it's a beacon QR or a stop QR
       if (this.isQRStop(info)) {
@@ -89,7 +104,7 @@ export class scanManager {
       } else {
         // if it's a QR Config
         if (this.mode == "P") {
-          // si on est en pas en mode parcours on tiens compte de l'ordre
+          // si on est en pas en mode parcours on tient compte de l'ordre
           //TODO vérifier que c'est bien celui qu'on attendait
           if (this.isQRStop(info)) {
             this.stopScanning();
@@ -108,7 +123,7 @@ export class scanManager {
   public startScanning() {
     console.log("startScanning()");
     this.eventsManager.publish("scanManager:startScanning");
-    this.state = "ready";
+    this.state = "config";
 
     //sabotage du bouton retour
     this.backButtonUnregister = this.platform.registerBackButtonAction(() => {

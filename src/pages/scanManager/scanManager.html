@@ -22,17 +22,22 @@
     </div>
 
     <div style="text-align: center">
-      <button ion-button (click)="startScanning()">Commencer</button>
-
+      <button ion-button (click)="startScanning()">Commencer</button> 
       <button ion-button (click)="backToMainMenu()">Annuler</button>
     </div>
   </div>
 
 
    <!-- state -> ready -->
-  <div *ngIf="state == 'ready'"> 
+  <div *ngIf="state == 'config'"> 
     <h1 class="contourBlanc">Scannez le QR Code de configuration</h1>
     <button  block style="padding:15px;" ion-button (click)="cancelScanning()"> Annuler le scan </button>
+  </div>
+
+  <!-- state -> ready -->
+  <div *ngIf="state == 'ready'"> 
+      <h1 class="contourBlanc">Scannez le QR Code de départ</h1>
+      <button  block style="padding:15px;" ion-button (click)="TODO()"> Annuler ma course </button>
   </div>
 
   <!-- state -> started -->
@@ -40,7 +45,7 @@
     <!-- case Course -->
     <div *ngSwitchCase="false">
       <!-- mode parcours -->
-      <h1>Scannez les balises de la course dans l'orde</h1>
+      <h1>Scannez les balises de la course dans l'ordre</h1>
       <!-- mode score -->
       <h1>Scannez les balises de la course</h1>
     </div>
