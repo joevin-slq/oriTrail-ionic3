@@ -257,7 +257,7 @@ export class scanManager {
     let uptimeLocal;
     // ne pas tenir compte de l'erreur Visual Studio
     await this.uptime
-      .getUptime(true)
+      .getUptime()
       .then(function(uptime) {
         uptimeLocal = uptime;
         console.log("getUptime(true)");
