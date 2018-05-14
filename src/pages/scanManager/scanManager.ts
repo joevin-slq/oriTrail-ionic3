@@ -144,6 +144,7 @@ export class scanManager {
         }
       }
     });
+    this.eventsManager.publish("scanManager:startScanning");
   }
 
   // TODO
@@ -257,7 +258,7 @@ export class scanManager {
     let uptimeLocal;
     // ne pas tenir compte de l'erreur Visual Studio
     await this.uptime
-      .getUptime()
+      .getUptime(true)
       .then(function(uptime) {
         uptimeLocal = uptime;
         console.log("getUptime(true)");
