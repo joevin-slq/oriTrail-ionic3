@@ -45,9 +45,10 @@
     <!-- case Course -->
     <div *ngSwitchCase="false">
       <!-- mode parcours -->
-      <h1>Scannez les balises de la course dans l'ordre</h1>
+      <h1>Scannez la balise n° {{nextQRID}}</h1>
       <!-- mode score -->
-      <h1>Scannez les balises de la course</h1>
+      <h1>Scannez les balises de la course.<br/>
+        Votre score est de {{score}}</h1>
     </div>
     <!-- case Installation -->
     <div *ngSwitchCase="true">

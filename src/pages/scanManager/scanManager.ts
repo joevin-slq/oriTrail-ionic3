@@ -25,7 +25,10 @@ export class scanManager {
   // contient toutes les infos du QR code config
   private infoConfig;
   public mode: string; // valeur possible: 'I' installation, 'C' course
-  public score = 0;
+  public score: number = 0;
+  public nextQRID: number = 1;
+  public countQRskipped: number = 0;
+  private endQRID;
 
   private eventsManager: Events;
   private backButtonUnregister: Function;
@@ -70,8 +73,16 @@ export class scanManager {
       } catch (e) {
         alert("Le QR code scanné comporte une erreur."); // error in the above string (in this case, yes)!
         console.log(e);
+        info = undefined;
       }
       console.log(JSON.stringify(info));
+
+      if(info != undefined){
+        if(!this.isQRIDValid(info)){
+          // if QR is not valid we delete it
+          info = undefined;
+        }
+      }
 
       if (info != undefined) {
         //
@@ -84,9 +95,8 @@ export class scanManager {
             this.infoConfig["bals"][0] = { nom: "Start" };
             //pas de balise end en course score
             if (this.infoConfig["type"] == "P") {
-              this.infoConfig["bals"][
-                Object.keys(this.infoConfig["bals"]).length
-              ] = { nom: "End" };
+              this.endQRID = Object.keys(this.infoConfig["bals"]).length;
+              this.infoConfig["bals"][this.endQRID] = { nom: "End" };
             }
 
             console.log(
@@ -106,34 +116,40 @@ export class scanManager {
           // on passe dans ce cas seulement si on est en mode course
           if (this.isQRStart(info)) {
             this.state = "started";
-            //TODO lancer le chrono
             console.log("top départ");
+            if (this.infoConfig["type"] == "P") {
+              //TODO lancer le chrono
+            } else {
+              //TODO lancer le countdown
+            }
           }
         } else if (this.state == "started") {
           if (this.mode == "I") {
-            console.log("on viens de scanner un QR durant l'installation");
-            //On viens de scanner une balise,
-            //TODO enregistrer la position GPS correspondannt à cette balise
-            //on enregistre la position GPS de la balise ( à coder sous forme de fonction générique + dans cette fonction si toutes les balise on été scannées on arrete l’appareil photo et on tente d’envoyer le résultat)
+            console.log("on vient de scanner un QR durant l'installation");
+            //On vient de scanner une balise
             this.addQR(info);
             if (this.allQRScanned()) {
               this.state = "ended";
             }
           } else {
             //on est en mode course
-            if (this.isQRStop(info)) {
-              this.state = "ended";
-            } else {
-              if (this.infoConfig["type"] == "S") {
-                // course en type score
+            if (this.infoConfig["type"] == "S") {
+              // course en type score
 
-                if (this.addQR(info)) {
-                  // ajouter les points la balise au score total
-                  this.score += info["val"];
-                }
-              } else {
-                // on est en mode parcours, les balises on un ordre préci
-                this.addQROrdered(info);
+              if (this.addQR(info)) {
+                // ajouter les points de la balise au score total
+                this.score += parseInt(info["val"]);
+              }
+              if (this.allQRScanned()) {
+                //TODO stopper le countdown
+                this.state = "ended";
+              }
+            } else {
+              // on est en mode parcours, les balises on un ordre préci
+              this.addQROrdered(info);
+              if (this.nextQRID == this.endQRID + 1) {
+                //TODO stoper le chrono
+                this.state = "ended";
               }
             }
           }
@@ -177,7 +193,6 @@ export class scanManager {
     this.state = "before";
   }
 
-  // TODO
   public backToMainMenu() {
     this.stopScanning();
 
@@ -189,15 +204,15 @@ export class scanManager {
     }
     this.state = "before"; // seems useless
 
+    console.log("résultat -> " + JSON.stringify(this.infoConfig));
     this.navCtrl.pop();
   }
 
   /**
    * Vérifie que le QRCode actuel est le QRCode de configuration
-   * @param QRCode 
+   * @param QRCode
    */
-  private isQRConfig(QRCode: object): boolean { 
-
+  private isQRConfig(QRCode: object): boolean {
     // Si on vient de scanner une balise de configuration
     // (le champs type est présent seulement dans cette balise)
     if (
@@ -219,6 +234,7 @@ export class scanManager {
     return false;
   }
 
+  //verifier que c'est un QR start correct
   private isQRStart(QRCode: object): boolean {
     let isQRValid = this.isQRIDValid(QRCode);
     if (isQRValid == true) {
@@ -232,6 +248,7 @@ export class scanManager {
     return isQRValid;
   }
 
+  //verifier que c'est un QR stop correct
   private isQRStop(QRCode: object): boolean {
     let isQRValid = this.isQRIDValid(QRCode);
 
@@ -251,40 +268,85 @@ export class scanManager {
       } else {
         isQRValid = false;
         let toast = this.toastCtrl.create({
-          message: `Ce QR code ne provient d'une autre course`,
+          message: `Ce QR code semble provenir d'une autre course`,
           showCloseButton: false
         });
         toast.present();
       }
-    }
+    } else isQRValid = true;
 
     return isQRValid;
   }
 
-  private allQRScanned() {
-    //TODO comparer les balise à scanner et les balise scanné
-    // TODO si on à tout scanné return true sinon false
+  // retourne: est-ce que toutes les balises on été scanné ? (y compris la balise fin)
+  private allQRScanned(): boolean {
+    // comparer les balise à scanner et les balise scanné
+    let areAllQRScanned = true;
+    for (let ID in this.infoConfig.bals) {
+      if (this.isIDAlreadyScanned(ID) == false) {
+        areAllQRScanned = false;
+      }
+    }
+
+    console.log("allQRScanned() returning -> " + areAllQRScanned);
+    return areAllQRScanned;
   }
 
-  //enregistrer quel QR a été scanné et leurs positions
+  //@param un ID de balise
+  //ça te renvoie si la balise a déja été scanné
+  private isIDAlreadyScanned(ID: string): boolean {
+    if (this.infoConfig.bals[ID].latitude != undefined) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  //enregistrer quel QR a été scanné et leurs positions + teù
+  //
   private addQR(newQR: object): boolean {
-    // TODO vérifier que le QR est pas déja dans la liste des QR scanné
-    // TODO si il y est pas, on le rajoute et on retourne true
-    this.updateBaliseTimeScan(newQR["num"]);
-    // TODO sinon (si il est déja dans la liste) on retourne fasle.
-    return true; // remove that
+    // vérifier que le QR est pas déja scanné
+    if (this.isIDAlreadyScanned(newQR["num"])) {
+      // si il est déja dans la liste, on retourne fasle.
+      return false;
+    } else {
+      // sinon il y est pas, on le rajoute et on retourne true
+      this.updateBalisePosition(newQR["num"]);
+      if (this.mode == "C") {
+        this.updateBaliseTimeScan(newQR["num"]);
+      }
+      return true;
+    }
   }
 
   private addQROrdered(newQR: object): boolean {
-    //TODO vérifier que newQR est égale au prochain QR code la course
-    //si il a sauté des QR {
-    //compter combien de QR il à sauter
-    //let nbQRSkipped;
-    // pénalité  += nombre de QR sauté * valeur de la pénalité
-    // pénalité += nbQRSkipped * this.infoConfig["pnlt"];
-    //}
-    this.addQR(newQR);
-    return true; // remove that
+    let returnValue;
+    let newQRID = parseInt(newQR["num"]);
+    //vérifier que newQR est le prochain QR code la course
+    if (this.nextQRID > newQRID) {
+      returnValue = false;
+      alert(
+        "Vous ne pouvez pas revenir en arrière, continuer votre course vers la balise n°" +
+          this.nextQRID
+      );
+      console.log("scan d'une balise déja sauté! On l'ignore");
+
+      //apres ça on se base sur addQR();
+      returnValue = this.addQR(newQR);
+    } else if (this.nextQRID < newQRID) {
+      //sautage de balise, on compte les pénalités
+      //compter combien de QR il à sauter
+      let count = newQRID - this.nextQRID;
+      this.countQRskipped += count;
+      console.log(count + " balise(s) sauté. total: " + this.countQRskipped);
+
+      //apres ça on se base sur addQR();
+      returnValue = this.addQR(newQR);
+    } else {
+      returnValue = false;
+    }
+
+    return returnValue;
   }
   /**
    * Ajoute à l'objet infoConfig le temps de la balise indiquée (dans un champs temps)
@@ -292,11 +354,10 @@ export class scanManager {
    */
   private async updateBaliseTimeScan(idBalise: number) {
     let uptimeLocal;
-    // ne pas tenir compte de l'erreur Visual Studio
     await this.uptime
       .getUptime()
       .then(function(uptime) {
-        uptimeLocal = uptime; 
+        uptimeLocal = uptime;
       })
       .catch(function(error) {
         uptimeLocal = "erreur";
@@ -313,6 +374,7 @@ export class scanManager {
   /**
    * Ajoute à l'objet infoConfig la position GPS prise à la volée (dans un champs position)
    * Donc la position GPS sera récupérée à l'appel de la fonction
+   * //on enregistre la position GPS de la balise
    * @param idBalise l'id de la balise dont on veut ajouter la position
    */
   private async updateBalisePosition(idBalise: number) {
