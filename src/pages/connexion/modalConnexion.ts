@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { ViewController } from 'ionic-angular'; 
 
 import { Storage } from '@ionic/storage'
-import { HttpClient } from '@angular/common/http'  
+import { HttpClient, HttpHeaders } from '@angular/common/http'  
 
 import { Observable } from 'rxjs/Observable'
 import { LoadingController } from 'ionic-angular';
@@ -29,8 +29,8 @@ export class modalConnexion {
 
 
    // cacher le modal
-  dismiss() {
-    this.viewCtrl.dismiss();
+  dismiss(msg: String) {
+    this.viewCtrl.dismiss(msg);
   }
 
   public getConnexionStatusColor() {
@@ -48,7 +48,7 @@ export class modalConnexion {
         let loader = this.loadingCtrl.create({
             content: "Connexion en cours..."
           });
-          loader.present();
+        loader.present();
         
         let id = this.login.id
         let pass = this.login.pass
@@ -62,17 +62,14 @@ export class modalConnexion {
             // TODO sauvegarder le token dans le Sotage 
 
             // TODO check si l'enregistrement de la token est effectif ou non
-            this.storage.set('token', result[0].token);
-            this.storage.set('user_id', id);
+            this.storage.set('token', result[0].token); 
+            console.log(JSON.stringify(result))
 
-            
-
-            // DEBUG
-            console.log(result[0].status)
-            console.log(result[0].token) 
-
+            // on récupère toutes les informations de l'utilisateurs... 
+            this.storage.set('userInfo', await this.getUserInformation(result[0].token));
+ 
             // on enleve le loader car le chargement est finit
-            loader.dismiss();
+            this.dismiss("ok");
             // pour set la couleur du résultat de connexion 
             this.connexionStatus = true;
             // affichage sur la vue
@@ -80,10 +77,10 @@ export class modalConnexion {
 
             // on revient à la page courrante
             await this.delay(1500);
-            this.dismiss() 
+            loader.dismiss() 
             return result[0] 
 
-        }, (err) => { // on catch les erreurs potentielles
+        }, async (err) => { // on catch les erreurs potentielles
             // DEBUG
             console.log(JSON.stringify(err))
             // on enleve le loader le chargement est finit
@@ -101,6 +98,33 @@ export class modalConnexion {
    
     }
  
+    /**
+     * fetch data from server
+     * @param token 
+     */
+    private async getUserInformation(token: string) {
+        let informations = []
+
+        // set de l'header pour la requête avec le token
+        const httpOptions = {
+            headers: new HttpHeaders().set('token', token)
+          };
+ 
+        let data:Observable<any> = this.http.get("https://www.oritrail.fr/api/user/", 
+              httpOptions
+        )
+           // ok
+        data.subscribe(async result => { 
+            informations = result
+            await console.log("RESULTAT USERINFO : " + result)
+         }, async (err) => { // on catch les erreurs potentielles
+            // DEBUG 
+            await console.log("ERREUR USERINFO : " + JSON.stringify(err))
+            informations = err
+        });
+
+        return informations
+    }
   
     async delay(ms) {
         return new Promise(function (resolve, reject) {

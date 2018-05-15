@@ -181,6 +181,9 @@ export class scanManager {
   public backToMainMenu() {
     this.stopScanning();
 
+    this.storage.set("mode", this.mode);
+    this.storage.set("resultat", this.infoConfig);
+
     if (this.backButtonUnregister != undefined) {
       this.backButtonUnregister();
     }

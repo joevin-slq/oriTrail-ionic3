@@ -9,9 +9,13 @@
   <div class="user">
     <h3>Espace membre</h3>
     <p>afficher ici si des données sont en attente d'envoi</p>
-    <p>
+    <p *ngIf="connecter == 'non'">
       <button ion-button (click)="seconnecter()">Se connecter</button>
       <button ion-button (click)="sinscrire()">S'enregistrer</button>
+    </p>
+    <p *ngIf="connecter == 'oui'">
+        Bonjour <span [innerHtml]="userInfo"></span> !
+        <button ion-button (click)="sedeconnecter()">Se déconnecter</button>
     </p>
   </div>
   <div class="run">
@@ -27,3 +31,16 @@
       <button ion-button (click)="participerCourse()">Participer à une course</button>
     </p>
   </div>
+  <div *ngIf="state == 'resultat'">
+    <div class="resultat">
+      <h3>Espace résultat/installation</h3>
+      <div>
+        <p>{{envoyer}}</p> 
+      </div> 
+      <p>
+        <button *ngIf="mode == 'course'" ion-button (click)="envoyerResultat()">Envoyer les résultats course</button> 
+        <button *ngIf="mode == 'installation'" ion-button (click)="envoyerInstallation()">Envoyer l'installation de la course</button> 
+      </p>
+    </div>
+  </div>
+</ion-content>
