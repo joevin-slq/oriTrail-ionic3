@@ -16,10 +16,11 @@ export class scanManager {
    *
    */
   //different possible states:
-  // before(on attend un QR config)
+  // before (affichage du tuto)
+  // config (on attend un QR config)
   // ready(on attend un QRstart)
   // started(On attend un QRbeacon ou un QRstop)
-  // ended, error. en fonction du "state" on affiche la div qui correspond
+  // ended
   public state: string = "before";
   // contient toutes les infos du QR code config
   private infoConfig;
@@ -62,92 +63,92 @@ export class scanManager {
 
       //une balise à été scannée, on la gère ici
       //console.log("handleScannedQR() -> " + event);
+      let info: object;
       // on parse les données reçu du QRCode
-      let info: object = JSON.parse(event);
-      //console.log(JSON.stringify(info));
-
-      // à partir du moment ou on à scanner un QR config on prend plus que des QR codes de la course correspondante
-      let isQRValid: boolean = true;
-      if (this.state != "config") {
-        if (info["id_course"] == this.infoConfig["id"]) {
-          isQRValid = true;
-        } else {
-          isQRValid = false;
-          let toast = this.toastCtrl.create({
-            message: `Ce QR code ne provient d'une autre course`,
-            showCloseButton: false
-          });
-          toast.present();
-        }
+      try {
+        info = JSON.parse(event);
+      } catch (e) {
+        alert("Le QR code scanné comporte une erreur."); // error in the above string (in this case, yes)!
+        console.log(e);
       }
+      console.log(JSON.stringify(info));
 
-      //
-      if (this.state == "config") {
-        if (this.isQRConfig(info)) {
-          // si on a rien scanner,
-          console.log("on vient de scanner le QR config");
-          this.infoConfig = info;
-          // on ajoute les balises de démarrage et de fin
-          this.infoConfig["bals"][0] = { nom: "Start" };
-          //pas de balise end en course score
-          if (this.infoConfig["type"] == "P") {
-            this.infoConfig["bals"][
-              Object.keys(this.infoConfig["bals"]).length
-            ] = { nom: "End" };
+      if (info != undefined) {
+        //
+        if (this.state == "config") {
+          if (this.isQRConfig(info)) {
+            // si on a rien scanner,
+            console.log("on vient de scanner le QR config");
+            this.infoConfig = info;
+            // on ajoute les balises de démarrage et de fin
+            this.infoConfig["bals"][0] = { nom: "Start" };
+            //pas de balise end en course score
+            if (this.infoConfig["type"] == "P") {
+              this.infoConfig["bals"][
+                Object.keys(this.infoConfig["bals"]).length
+              ] = { nom: "End" };
+            }
+
+            console.log(
+              "CONF AVEC START/END : " + JSON.stringify(this.infoConfig["bals"])
+            );
+            if (this.mode == "I") {
+              // si on est en mode installation on passe directement en mode started
+              this.state = "started";
+              console.log("on est en mode installation");
+            } else {
+              // sinon  on passe en mode ready
+              this.state = "ready";
+              console.log("on est en mode course");
+            }
           }
-
-          console.log(
-            "CONF AVEC START/END : " + JSON.stringify(this.infoConfig["bals"])
-          );
-          if (this.mode == "I") {
-            // si on est en mode installation on passe directement en mode started
+        } else if (this.state == "ready") {
+          // on passe dans ce cas seulement si on est en mode course
+          if (this.isQRStart(info)) {
             this.state = "started";
-            console.log("on est en mode installation");
-          } else {
-            // sinon  on passe en mode ready
-            this.state = "ready";
-            console.log("on est en mode course");
+            //TODO lancer le chrono
+            console.log("top départ");
           }
-        }
-      } else if (this.state == "ready") {
-        // on passe dans ce cas seulement si on est en mode course
-        if (this.isQRStart(info)) {
-          this.state = "started";
-          //TODO lancer le chrono
-          console.log("top départ");
-        }
-      } else if (this.state == "started") {
-        if (this.mode == "I") {
-          console.log("on viens de scanner un QR durant l'installation");
-          //On viens de scanner une balise,
-          //TODO enregistrer la position GPS correspondannt à cette balise
-          //on enregistre la position GPS de la balise ( à coder sous forme de fonction générique + dans cette fonction si toutes les balise on été scannées on arrete l’appareil photo et on tente d’envoyer le résultat)
-          this.addQR(info);
-          if (this.allQRScanned()) {
-            this.backToMainMenu();
-          }
-        } else {
-          //on est en mode course
-          if (this.isQRStop(info)) {
-            this.backToMainMenu();
-          }
-          if (this.infoConfig["type"] == "S") {
-            // course en type score
-
-            if (this.addQR(info)) {
-              // TODO ajouter les points la balise au score total
+        } else if (this.state == "started") {
+          if (this.mode == "I") {
+            console.log("on viens de scanner un QR durant l'installation");
+            //On viens de scanner une balise,
+            //TODO enregistrer la position GPS correspondannt à cette balise
+            //on enregistre la position GPS de la balise ( à coder sous forme de fonction générique + dans cette fonction si toutes les balise on été scannées on arrete l’appareil photo et on tente d’envoyer le résultat)
+            this.addQR(info);
+            if (this.allQRScanned()) {
+              this.state = "ended";
             }
           } else {
-            // on est en mode parcours, les balises on un ordre préci
-            this.addQROrdered(info);
+            //on est en mode course
+            if (this.isQRStop(info)) {
+              this.state = "ended";
+            } else {
+              if (this.infoConfig["type"] == "S") {
+                // course en type score
+
+                if (this.addQR(info)) {
+                  // ajouter les points la balise au score total
+                  this.score += info["val"];
+                }
+              } else {
+                // on est en mode parcours, les balises on un ordre préci
+                this.addQROrdered(info);
+              }
+            }
           }
         }
       }
+
+      // state ended -> on termine immédiatement sinon on attends un nouveau scan
+      if (this.state != "ended") {
+        this.eventsManager.publish("scanManager:startScanning");
+      } else {
+        this.backToMainMenu();
+      }
     });
-    this.eventsManager.publish("scanManager:startScanning");
   }
 
-  // TODO
   public startScanning() {
     console.log("startScanning()");
     this.eventsManager.publish("scanManager:startScanning");
@@ -188,7 +189,7 @@ export class scanManager {
     this.navCtrl.pop();
   }
 
-  private isQRConfig(QRCode: object) {
+  private isQRConfig(QRCode: object): boolean {
     //TODO return true if the QR code is a config QRcode, false instead
     //TODO On doit vérifier que tout les champs soit bien présent pour éviter de prendre des erreurs
 
@@ -214,17 +215,47 @@ export class scanManager {
   }
 
   private isQRStart(QRCode: object): boolean {
-    //TODO vérifier que ce soit le QR correspondant à la bonne course
-    if (QRCode["num"] == "1" && QRCode["nom"] == "Start") {
-      return true;
-    } // else
-    return false;
+    let isQRValid = this.isQRIDValid(QRCode);
+    if (isQRValid == true) {
+      if (QRCode["num"] == "1" && QRCode["nom"] == "Start") {
+        isQRValid = true;
+      } else {
+        isQRValid = false;
+      }
+    }
+
+    return isQRValid;
   }
 
   private isQRStop(QRCode: object): boolean {
-    //TODO vérifier que ce soit le QR correspondant à la bonne course
-    return this.isEndBalise(QRCode["num"]);
+    let isQRValid = this.isQRIDValid(QRCode);
+
+    if (isQRValid == true) {
+      isQRValid = this.isEndBalise(QRCode["num"]);
+    }
+    return isQRValid;
   }
+
+  //vérif du champs id_course, ne pas verifier ça sur le QR config
+  private isQRIDValid(QRCode: object): boolean {
+    // à partir du moment ou on à scanner un QR config on prend plus que des QR codes de la course correspondante
+    let isQRValid: boolean = false;
+    if (this.infoConfig != undefined) {
+      if (QRCode["id_course"] == this.infoConfig["id"]) {
+        isQRValid = true;
+      } else {
+        isQRValid = false;
+        let toast = this.toastCtrl.create({
+          message: `Ce QR code ne provient d'une autre course`,
+          showCloseButton: false
+        });
+        toast.present();
+      }
+    }
+
+    return isQRValid;
+  }
+
   private allQRScanned() {
     //TODO comparer les balise à scanner et les balise scanné
     // TODO si on à tout scanné return true sinon false

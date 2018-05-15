@@ -1,11 +1,11 @@
 <!-- camera scan QRcode -->
 <ion-content [class.scanning]="displayCamera()" padding>
-
+  <!--  en fonction du "state" on affiche la div qui correspond -->
   <!-- state -> before -->
   <div *ngIf="state == 'before'" [ngSwitch]="this.mode">
     <div *ngSwitchCase="'C'">
       <h1>Participer à une course</h1>
-      <p style="text-align: justify;">
+      <p>
         Pour participer à une course, vous devez disposer d'un QR code de configuration.
         <br/>
         <br/> Munissez vous du Qr code de configuration puis cliquer sur "Commencer"
@@ -30,13 +30,14 @@
   <!-- state -> ready -->
   <div *ngIf="state == 'config'">
     <h1>Scannez le QR Code de configuration</h1>
-    <button block style="padding:15px;" ion-button (click)="cancelScanning()"> Annuler le scan </button>
+    <p>
+      <button ion-button (click)="cancelScanning()"> Annuler le scan </button>
+    </p>
   </div>
 
   <!-- state -> ready -->
   <div *ngIf="state == 'ready'">
     <h1>Scannez le QR Code de départ</h1>
-    <button block style="padding:15px;" ion-button (click)="TODO()"> Annuler ma course </button>
   </div>
 
   <!-- state -> started -->
