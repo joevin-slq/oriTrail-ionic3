@@ -189,9 +189,11 @@ export class scanManager {
     this.navCtrl.pop();
   }
 
-  private isQRConfig(QRCode: object): boolean {
-    //TODO return true if the QR code is a config QRcode, false instead
-    //TODO On doit vérifier que tout les champs soit bien présent pour éviter de prendre des erreurs
+  /**
+   * Vérifie que le QRCode actuel est le QRCode de configuration
+   * @param QRCode 
+   */
+  private isQRConfig(QRCode: object): boolean { 
 
     // Si on vient de scanner une balise de configuration
     // (le champs type est présent seulement dans cette balise)
@@ -289,19 +291,13 @@ export class scanManager {
     let uptimeLocal;
     // ne pas tenir compte de l'erreur Visual Studio
     await this.uptime
-      .getUptime(true)
+      .getUptime()
       .then(function(uptime) {
-        uptimeLocal = uptime;
-        console.log("getUptime(true)");
+        uptimeLocal = uptime; 
       })
       .catch(function(error) {
         uptimeLocal = "erreur";
       });
-
-    // On ajoute l'uptime mais également le datetime (timestamp) du téléphone pour étaloner les futurs uptimes
-    if (idBalise == 0) {
-      this.infoConfig["bals"][0]["temps_init"] = new Date().getTime();
-    }
 
     // ajout du temps à la balise
     this.infoConfig["bals"][idBalise]["temps"] = uptimeLocal;
