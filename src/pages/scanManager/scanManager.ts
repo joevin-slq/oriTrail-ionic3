@@ -23,12 +23,12 @@ export class scanManager {
   // ended
   public state: string = "before";
   // contient toutes les infos du QR code config
-  private infoConfig;
+  public infoConfig;
   public mode: string; // valeur possible: 'I' installation, 'C' course
   public score: number = 0;
-  public nextQRID: number = 1;
+  public nextQRID: number = 2;
   public countQRskipped: number = 0;
-  private endQRID;
+  private stopQRID;
 
   private eventsManager: Events;
   private backButtonUnregister: Function;
@@ -77,8 +77,8 @@ export class scanManager {
       }
       console.log(JSON.stringify(info));
 
-      if(info != undefined){
-        if(!this.isQRIDValid(info)){
+      if (info != undefined) {
+        if (!this.isQRIDValid(info)) {
           // if QR is not valid we delete it
           info = undefined;
         }
@@ -92,15 +92,16 @@ export class scanManager {
             console.log("on vient de scanner le QR config");
             this.infoConfig = info;
             // on ajoute les balises de démarrage et de fin
-            this.infoConfig["bals"][0] = { nom: "Start" };
+            this.infoConfig["bals"].unshift({ num: 1, nom: "Start" });
             //pas de balise end en course score
             if (this.infoConfig["type"] == "P") {
-              this.endQRID = Object.keys(this.infoConfig["bals"]).length;
-              this.infoConfig["bals"][this.endQRID] = { nom: "End" };
+              this.stopQRID = this.infoConfig["bals"].length + 1;
+              this.infoConfig["bals"].push({ num: this.stopQRID, nom: "Stop" });
             }
 
             console.log(
-              "CONF AVEC START/END : " + JSON.stringify(this.infoConfig["bals"])
+              "ajout de Start/Stop -> infoConfig.bals = " +
+                JSON.stringify(this.infoConfig["bals"])
             );
             if (this.mode == "I") {
               // si on est en mode installation on passe directement en mode started
@@ -138,7 +139,7 @@ export class scanManager {
 
               if (this.addQR(info)) {
                 // ajouter les points de la balise au score total
-                this.score += parseInt(info["val"]);
+                this.score += info["val"];
               }
               if (this.allQRScanned()) {
                 //TODO stopper le countdown
@@ -147,7 +148,7 @@ export class scanManager {
             } else {
               // on est en mode parcours, les balises on un ordre préci
               this.addQROrdered(info);
-              if (this.nextQRID == this.endQRID + 1) {
+              if (this.nextQRID == this.stopQRID + 1) {
                 //TODO stoper le chrono
                 this.state = "ended";
               }
@@ -155,6 +156,7 @@ export class scanManager {
           }
         }
       }
+      console.log("infoConfig = " + JSON.stringify(this.infoConfig));
 
       // state ended -> on termine immédiatement sinon on attends un nouveau scan
       if (this.state != "ended") {
@@ -249,11 +251,23 @@ export class scanManager {
   }
 
   //verifier que c'est un QR stop correct
+  /**
+   * Détermine si l'id de la balise passée est l'id de la dernière balise ou non (Stop)
+   * /!\ on part du principe que les balises début / fin ont bien été ajoutées à infoConfig
+   * @param idBalise QR code de la balise à tester
+   */
   private isQRStop(QRCode: object): boolean {
     let isQRValid = this.isQRIDValid(QRCode);
 
     if (isQRValid == true) {
-      isQRValid = this.isEndBalise(QRCode["num"]);
+      let nombreDeBalise = this.infoConfig["bals"].length;
+
+      // +1 car on a nombre de balise - 2 dans notre config
+      if (QRCode["num"] == nombreDeBalise) {
+        isQRValid = true;
+      } else {
+        isQRValid = false;
+      }
     }
     return isQRValid;
   }
@@ -267,9 +281,10 @@ export class scanManager {
         isQRValid = true;
       } else {
         isQRValid = false;
+        ///TODO faire un truc avec ce toast de merde !
         let toast = this.toastCtrl.create({
           message: `Ce QR code semble provenir d'une autre course`,
-          showCloseButton: false
+          duration: 4000
         });
         toast.present();
       }
@@ -282,8 +297,8 @@ export class scanManager {
   private allQRScanned(): boolean {
     // comparer les balise à scanner et les balise scanné
     let areAllQRScanned = true;
-    for (let ID in this.infoConfig.bals) {
-      if (this.isIDAlreadyScanned(ID) == false) {
+    for (let element of this.infoConfig.bals) {
+      if (this.isIDAlreadyScanned(element.num) == false) {
         areAllQRScanned = false;
       }
     }
@@ -294,20 +309,21 @@ export class scanManager {
 
   //@param un ID de balise
   //ça te renvoie si la balise a déja été scanné
-  private isIDAlreadyScanned(ID: string): boolean {
-    if (this.infoConfig.bals[ID].latitude != undefined) {
+  private isIDAlreadyScanned(ID: number): boolean {
+    let arrayID: number = ID - 1;
+    if (this.infoConfig.bals[arrayID].latitude != undefined) {
       return true;
     } else {
       return false;
     }
   }
 
-  //enregistrer quel QR a été scanné et leurs positions + teù
+  //enregistrer quel QR a été scanné et leurs positions + temps
   //
   private addQR(newQR: object): boolean {
     // vérifier que le QR est pas déja scanné
     if (this.isIDAlreadyScanned(newQR["num"])) {
-      // si il est déja dans la liste, on retourne fasle.
+      // si il est déja dans la liste, on retourne false.
       return false;
     } else {
       // sinon il y est pas, on le rajoute et on retourne true
@@ -319,9 +335,13 @@ export class scanManager {
     }
   }
 
+  /*
+   * scan des balises dans l'ordre en commençant par la balise 1
+   * cette fonction vérifie que c'est bien le QR attendu, le cas échéant, applique les pénalités en conséquence ou ignore le QR
+  */
   private addQROrdered(newQR: object): boolean {
     let returnValue;
-    let newQRID = parseInt(newQR["num"]);
+    let newQRID = newQR["num"];
     //vérifier que newQR est le prochain QR code la course
     if (this.nextQRID > newQRID) {
       returnValue = false;
@@ -354,6 +374,7 @@ export class scanManager {
    * @param idBalise l'id de la balise dans la liste
    */
   private async updateBaliseTimeScan(idBalise: number) {
+    console.log("updateBaliseTimeScan");
     let uptimeLocal;
     await this.uptime
       .getUptime()
@@ -361,23 +382,24 @@ export class scanManager {
         uptimeLocal = uptime;
       })
       .catch(function(error) {
-        uptimeLocal = "erreur";
+        uptimeLocal = null;
+        console.log("ERREUR de récupération uptime ! updateBaliseTimeScan()");
       });
 
     // si c'est la balise de départ on note la date de début (du téléphone ...)
     if(idBalise == 1) { // balise de départ
-      this.infoConfig["bals"][idBalise]["temps_initial"] = new Date().getTime();
+      this.infoConfig["bals"][idBalise-1]["temps_initial"] = new Date().getTime();
       // ajout du temps à la balise
-      this.infoConfig["bals"][idBalise]["temps"] = uptimeLocal;
+      this.infoConfig["bals"][idBalise-1]["temps"] = uptimeLocal;
     }
-    // si c'est une balise autre que le départ ou soustrait l'uptime de celle de départ 
+    // si c'est une balise autre que le départ ou soustrait l'uptime de celle de départ
     if(idBalise != 1) {
-      // ajout du temps à la balise 
-      this.infoConfig["bals"][idBalise]["temps"] = 
-              this.infoConfig["bals"][1]["temps"] 
+      // ajout du temps à la balise
+      this.infoConfig["bals"][idBalise-1]["temps"] =
+              this.infoConfig["bals"][0]["temps"]
               - uptimeLocal;
-    } 
- 
+    }
+
     // DEBUG
     console.log(uptimeLocal);
     console.log(JSON.stringify(this.infoConfig));
@@ -390,6 +412,7 @@ export class scanManager {
    * @param idBalise l'id de la balise dont on veut ajouter la position
    */
   private async updateBalisePosition(idBalise: number) {
+    console.log("updateBalisePosition");
     let position;
     // on enregistre la position GPS dans la variable position
     await this.geolocation
@@ -401,28 +424,23 @@ export class scanManager {
         };
       })
       .catch(function(error) {
-        position = { erreur: error };
+        position = {
+          latitude: null,
+          longitude: null
+        };
+        console.log(
+          "ERREUR de récupérartion de la position. updateBalisePosition()"
+        );
+
+        // ajout de la position pour la balise
+        this.infoConfig["bals"][idBalise - 1]["longitude"] = position.longitude;
+        this.infoConfig["bals"][idBalise - 1]["latitude"] = position.latitude;
+        console.log(
+          "position ajouté dans " +
+            JSON.stringify(this.infoConfig["bals"][idBalise - 1])
+        );
+        // DEBUG
+        console.log("position = " + JSON.stringify(position));
       });
-    // ajout de la position pour la balise
-    this.infoConfig["bals"][idBalise]["position"] = position;
-
-    // DEBUG
-    console.log(JSON.stringify(this.infoConfig));
-    console.log(JSON.stringify(position));
-  }
-
-  /**
-   * Détermine si l'id de la balise passée est l'id de la dernière balise ou non (end)
-   * /!\ on part du principe que les balises début / fin ont bien été ajoutées à infoConfig
-   * @param idBalise l'id de la balise à tester
-   */
-  private isEndBalise(idBalise: number) {
-    let nombreDeBalise = Object.keys(this.infoConfig["bals"]).length;
-
-    // +1 car on a nombre de balise - 2 dans notre config
-    if (idBalise == nombreDeBalise + 1) {
-      return true;
-    } // else
-    return false;
   }
 }

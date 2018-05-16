@@ -1,6 +1,6 @@
 <ion-header>
   <ion-navbar>
-    <ion-title>Oritrailc</ion-title>
+    <ion-title>oriTrail</ion-title>
   </ion-navbar>
 </ion-header>
 
@@ -20,7 +20,7 @@
   <div class="run">
     <h3>Espace course</h3>
     <p>
-      Bienvenu sur la page d'accueil d'Oritrail
+      Bienvenue sur la page d'accueil d'Oritrail
     </p>
     <p>
       TODO Description app
@@ -34,11 +34,11 @@
     <div class="resultat">
       <h3>Espace résultat/installation</h3>
       <div>
-        <p>{{envoyer}}</p> 
-      </div> 
+        <p>{{envoyer}}</p>
+      </div>
       <p>
-        <button *ngIf="mode == 'course'" ion-button (click)="envoyerResultat()">Envoyer les résultats course</button> 
-        <button *ngIf="mode == 'installation'" ion-button (click)="envoyerInstallation()">Envoyer l'installation de la course</button> 
+        <button *ngIf="mode == 'course'" ion-button (click)="envoyerResultat()">Envoyer les résultats course</button>
+        <button *ngIf="mode == 'installation'" ion-button (click)="envoyerInstallation()">Envoyer l'installation de la course</button>
       </p>
     </div>
   </div>
