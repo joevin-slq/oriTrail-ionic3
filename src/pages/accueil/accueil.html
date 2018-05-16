@@ -8,13 +8,12 @@
 <ion-content padding class="accueil">
   <div class="user">
     <h3>Espace membre</h3>
-    <p>afficher ici si des données sont en attente d'envoi</p>
     <p *ngIf="connecter == 'non'">
       <button ion-button (click)="seconnecter()">Se connecter</button>
       <button ion-button (click)="sinscrire()">S'enregistrer</button>
     </p>
     <p *ngIf="connecter == 'oui'">
-        Bonjour <span [innerHtml]="userInfo"></span> !
+        <span>{{userInfo}}</span> !
         <button ion-button (click)="sedeconnecter()">Se déconnecter</button>
     </p>
   </div>

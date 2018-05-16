@@ -62,11 +62,11 @@ export class modalConnexion {
             // TODO sauvegarder le token dans le Sotage 
 
             // TODO check si l'enregistrement de la token est effectif ou non
-            this.storage.set('token', result[0].token); 
-            console.log(JSON.stringify(result))
+            this.storage.set('token', result[1].token);  
 
             // on récupère toutes les informations de l'utilisateurs... 
-            this.storage.set('userInfo', await this.getUserInformation(result[0].token));
+            await this.setUserInformation(result[1].token);
+             
  
             // on enleve le loader car le chargement est finit
             this.dismiss("ok");
@@ -82,7 +82,7 @@ export class modalConnexion {
 
         }, async (err) => { // on catch les erreurs potentielles
             // DEBUG
-            console.log(JSON.stringify(err))
+            // console.log(JSON.stringify(err))
             // on enleve le loader le chargement est finit
             loader.dismiss();  
             // pour set la couleur du résultat de connexion
@@ -102,30 +102,26 @@ export class modalConnexion {
      * fetch data from server
      * @param token 
      */
-    private async getUserInformation(token: string) {
-        let informations = []
-
-        // set de l'header pour la requête avec le token
+    private async setUserInformation(token: String) { 
+        
+        // set de l'header pour la requête avec le token 
         const httpOptions = {
-            headers: new HttpHeaders().set('token', token)
-          };
+            headers: new HttpHeaders().set('Authorization', "Bearer " + token)
+        }; 
  
-        let data:Observable<any> = this.http.get("https://www.oritrail.fr/api/user/", 
+        let data:Observable<any> = this.http.get("https://www.oritrail.fr/api/user", 
               httpOptions
         )
-           // ok
-        data.subscribe(async result => { 
-            informations = result
-            await console.log("RESULTAT USERINFO : " + result)
+        // ok
+         data.subscribe(async result => { 
+            //console.log("DONNÉE DEPUIS LA FONCTION : "  + JSON.stringify(result))
+            await this.storage.set('userInfo', result); 
          }, async (err) => { // on catch les erreurs potentielles
-            // DEBUG 
-            await console.log("ERREUR USERINFO : " + JSON.stringify(err))
-            informations = err
-        });
-
-        return informations
+            console.log("Err fetching data")
+            // do nothing ... on enregistre pas le résultat
+        }); 
     }
-  
+    
     async delay(ms) {
         return new Promise(function (resolve, reject) {
             setTimeout(resolve, ms);

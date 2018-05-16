@@ -3,16 +3,18 @@ import { Component, NgZone } from "@angular/core";
 import { Storage } from "@ionic/storage";
 import { HttpClient } from "@angular/common/http";
 
-import { Observable } from "rxjs/Observable";
+//import { Observable } from "rxjs/Observable";
 import { ModalController, NavController, NavParams } from "ionic-angular";
 
 import { modalConnexion } from "../connexion/modalConnexion";
 import { modalEnregistrement } from "../enregistrement/modalEnregistrement";
 import { scanManager } from "../scanManager/scanManager";
+import { ViewEncapsulation } from '@angular/core'
 
 @Component({
   selector: "page-accueil",
-  templateUrl: "accueil.html"
+  templateUrl: "accueil.html",
+  encapsulation: ViewEncapsulation.None
 })
 export class AccueilPage {
   // etat avec ou sans résultat
@@ -66,13 +68,12 @@ export class AccueilPage {
   public async seconnecter() {
     let profileModal = this.modalCtrl.create(modalConnexion);
     profileModal.present();
-    profileModal.onDidDismiss(data => {
+    profileModal.onDidDismiss(async data => {
       // on met à jour la vue
       if (data == "ok") {
-        this.zone.run(() => {
-          this.storage.get('userInfo').then((val) => {
-            //console.log(JSON.stringify(val))
-            //this.userInfo = val;
+        this.zone.run(async () => {
+          await this.storage.get('userInfo').then((val) => { 
+            this.userInfo =  "Bienvenu " + val.prenom + " "  + val.nom
           });
           this.connecter = "oui"
         })
@@ -86,8 +87,11 @@ export class AccueilPage {
   }
 
   public sedeconnecter() {
+    // on raffiche les possiblités de connexion
     this.connecter = "non"
-
+    // on supprime les données de la connexion
+    this.storage.remove('userInfo');
+    this.storage.remove('token');
   }
 
   public installerCourse() {
