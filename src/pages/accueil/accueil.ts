@@ -137,6 +137,7 @@ export class AccueilPage {
   private enleverResultatAEnvoyer() {
     this.zone.run(() => {
       this.state = "before";
+      this.mode = "null"
     });
   }
 }

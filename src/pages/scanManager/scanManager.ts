@@ -350,6 +350,7 @@ export class scanManager {
   }
   /**
    * Ajoute à l'objet infoConfig le temps de la balise indiquée (dans un champs temps)
+   * UPTIME => Milliseconde /!\
    * @param idBalise l'id de la balise dans la liste
    */
   private async updateBaliseTimeScan(idBalise: number) {
@@ -363,9 +364,20 @@ export class scanManager {
         uptimeLocal = "erreur";
       });
 
-    // ajout du temps à la balise
-    this.infoConfig["bals"][idBalise]["temps"] = uptimeLocal;
-
+    // si c'est la balise de départ on note la date de début (du téléphone ...)
+    if(idBalise == 1) { // balise de départ
+      this.infoConfig["bals"][idBalise]["temps_initial"] = new Date().getTime();
+      // ajout du temps à la balise
+      this.infoConfig["bals"][idBalise]["temps"] = uptimeLocal;
+    }
+    // si c'est une balise autre que le départ ou soustrait l'uptime de celle de départ 
+    if(idBalise != 1) {
+      // ajout du temps à la balise 
+      this.infoConfig["bals"][idBalise]["temps"] = 
+              this.infoConfig["bals"][1]["temps"] 
+              - uptimeLocal;
+    } 
+ 
     // DEBUG
     console.log(uptimeLocal);
     console.log(JSON.stringify(this.infoConfig));
