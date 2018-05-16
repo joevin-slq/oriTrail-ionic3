@@ -25,17 +25,14 @@ import { Subscription } from 'rxjs/Subscription';
      * Scan function
      */
     public startScanning() {
-      console.log("qrcodescan.startScanning()");
+      //console.log("qrcodescan.startScanning()");
       this.qrScanner.prepare()
       .then((status: QRScannerStatus) => {
         if (status.authorized) {
-
-          // camera permission was granted
-          console.log('camera authorized');
-
+ 
           // start scanning
           this.scanSubscription = this.qrScanner.scan().subscribe((text: string) => {
-            console.log('Scanned something', text);
+            //console.log('Scanned something', text);
             // this.callback.emit(text); //send the info to the scanManager
             this.events.publish("qrcodescan:newqr", text);
           });
@@ -55,13 +52,13 @@ import { Subscription } from 'rxjs/Subscription';
           // wait for user to scan something, then the observable callback will be called
 
         } else if (status.denied) {
-          console.log('denied');
+          console.log('PERMISSION TOTALLY DENIED');
           // camera permission was permanently denied
           // you must use QRScanner.openSettings() method to guide the user to the settings page
           // then they can grant the permission from there
         } else {
           // permission was denied, but not permanently. You can ask for permission again at a later time.
-          console.log('else');
+          console.log('PERMISSION DENIED BUT NOT PERMANENTLY');
         }
       })
       .catch((e: any) => {

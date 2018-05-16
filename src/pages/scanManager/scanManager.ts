@@ -75,7 +75,7 @@ export class scanManager {
         console.log(e);
         info = undefined;
       }
-      console.log(JSON.stringify(info));
+      //console.log(JSON.stringify(info));
 
       if (info != undefined) {
         if (!this.isQRIDValid(info)) {
@@ -101,7 +101,7 @@ export class scanManager {
 
             console.log(
               "ajout de Start/Stop -> infoConfig.bals = " +
-                JSON.stringify(this.infoConfig["bals"])
+              JSON.stringify(this.infoConfig["bals"])
             );
             if (this.mode == "I") {
               // si on est en mode installation on passe directement en mode started
@@ -156,7 +156,7 @@ export class scanManager {
           }
         }
       }
-      console.log("infoConfig = " + JSON.stringify(this.infoConfig));
+      //console.log("infoConfig = " + JSON.stringify(this.infoConfig));
 
       // state ended -> on termine immédiatement sinon on attends un nouveau scan
       if (this.state != "ended") {
@@ -281,12 +281,12 @@ export class scanManager {
         isQRValid = true;
       } else {
         isQRValid = false;
-        ///TODO faire un truc avec ce toast de merde !
-        let toast = this.toastCtrl.create({
+        // Pour le moment on affiche pas le toast
+        /* let toast = this.toastCtrl.create({
           message: `Ce QR code semble provenir d'une autre course`,
           duration: 4000
         });
-        toast.present();
+        toast.present();*/
       }
     } else isQRValid = true;
 
@@ -347,7 +347,7 @@ export class scanManager {
       returnValue = false;
       alert(
         "Vous ne pouvez pas revenir en arrière, continuer votre course vers la balise n°" +
-          this.nextQRID
+        this.nextQRID
       );
       console.log("scan d'une balise déja sauté! On l'ignore");
 
@@ -378,26 +378,27 @@ export class scanManager {
     let uptimeLocal;
     await this.uptime
       .getUptime()
-      .then(function(uptime) {
+      .then(function (uptime) {
+        console.log("LOCALISATION CHOPPÉ")
         uptimeLocal = uptime;
       })
-      .catch(function(error) {
+      .catch(function (error) {
         uptimeLocal = null;
         console.log("ERREUR de récupération uptime ! updateBaliseTimeScan()");
       });
 
     // si c'est la balise de départ on note la date de début (du téléphone ...)
-    if(idBalise == 1) { // balise de départ
-      this.infoConfig["bals"][idBalise-1]["temps_initial"] = new Date().getTime();
+    if (idBalise == 1) { // balise de départ
+      this.infoConfig["bals"][idBalise - 1]["temps_initial"] = new Date().getTime();
       // ajout du temps à la balise
-      this.infoConfig["bals"][idBalise-1]["temps"] = uptimeLocal;
+      this.infoConfig["bals"][idBalise - 1]["temps"] = uptimeLocal;
     }
     // si c'est une balise autre que le départ ou soustrait l'uptime de celle de départ
-    if(idBalise != 1) {
+    if (idBalise != 1) {
       // ajout du temps à la balise
-      this.infoConfig["bals"][idBalise-1]["temps"] =
-              this.infoConfig["bals"][0]["temps"]
-              - uptimeLocal;
+      this.infoConfig["bals"][idBalise - 1]["temps"] =
+        this.infoConfig["bals"][0]["temps"]
+        - uptimeLocal;
     }
 
     // DEBUG
@@ -417,13 +418,13 @@ export class scanManager {
     // on enregistre la position GPS dans la variable position
     await this.geolocation
       .getCurrentPosition()
-      .then(function(resp) {
+      .then(function (resp) {
         position = {
           latitude: resp.coords.latitude,
           longitude: resp.coords.longitude
         };
       })
-      .catch(function(error) {
+      .catch(function (error) {
         position = {
           latitude: null,
           longitude: null
@@ -431,16 +432,17 @@ export class scanManager {
         console.log(
           "ERREUR de récupérartion de la position. updateBalisePosition()"
         );
-
-        // ajout de la position pour la balise
-        this.infoConfig["bals"][idBalise - 1]["longitude"] = position.longitude;
-        this.infoConfig["bals"][idBalise - 1]["latitude"] = position.latitude;
-        console.log(
-          "position ajouté dans " +
-            JSON.stringify(this.infoConfig["bals"][idBalise - 1])
-        );
-        // DEBUG
-        console.log("position = " + JSON.stringify(position));
       });
+
+    // ajout de la position pour la balise
+    this.infoConfig["bals"][idBalise - 1]["longitude"] = position.longitude;
+    this.infoConfig["bals"][idBalise - 1]["latitude"] = position.latitude;
+    console.log(
+      "position ajouté dans " +
+      JSON.stringify(this.infoConfig["bals"][idBalise - 1])
+    );
+    // DEBUG
+    console.log("position = " + JSON.stringify(position)); 
   }
+
 }
