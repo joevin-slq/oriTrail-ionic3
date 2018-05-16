@@ -6,6 +6,7 @@ import { Platform, NavController, NavParams } from "ionic-angular";
 import { Service } from "../../utils/services";
 import { ToastController } from "ionic-angular";
 import { Uptime } from "@ionic-native/uptime";
+import { AccueilPage } from "../accueil/accueil";
 
 @Component({
   selector: "scanManager",
@@ -92,7 +93,7 @@ export class scanManager {
             console.log("on vient de scanner le QR config");
             this.infoConfig = info;
             // on ajoute les balises de démarrage et de fin
-            this.infoConfig["bals"].unshift({ num: 1, nom: "Start" });
+            this.infoConfig["bals"].unshift({ num: 1, nom: "Start" }); 
             //pas de balise end en course score
             if (this.infoConfig["type"] == "P") {
               this.stopQRID = this.infoConfig["bals"].length + 1;
@@ -207,7 +208,9 @@ export class scanManager {
     this.state = "before"; // seems useless
 
     console.log("résultat -> " + JSON.stringify(this.infoConfig));
-    this.navCtrl.pop();
+    this.navCtrl.push(AccueilPage, {
+          resultat: this.infoConfig
+    });
   }
 
   /**

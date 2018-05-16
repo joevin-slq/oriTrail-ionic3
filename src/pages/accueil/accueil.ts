@@ -4,7 +4,7 @@ import { Storage } from "@ionic/storage";
 import { HttpClient } from "@angular/common/http";
 
 //import { Observable } from "rxjs/Observable";
-import { ModalController, NavController, NavParams } from "ionic-angular";
+import { ModalController, NavController, NavParams, ViewController } from "ionic-angular";
 
 import { modalConnexion } from "../connexion/modalConnexion";
 import { modalEnregistrement } from "../enregistrement/modalEnregistrement";
@@ -38,13 +38,14 @@ export class AccueilPage {
     public navCtrl: NavController,
     public zone: NgZone,
     public navparams: NavParams,
+    private viewCtrl: ViewController
   ) {
     //set a key/value
     this.storage.set("api", "http://www.oritrail.fr/api/");
 
-    this.zone.run(() => {
-      // si on a des résultat à envoyer (paramètre de navigation de la vue depuis scanManager)
-      if (navparams.get("resultat") != undefined) {
+    this.zone.run(() => { 
+      // si on a des résultat à envoyer (paramètre de navigation de la vue depuis scanManager) 
+      if (navparams.get("resultat") != null) {  
         // on affiche sur la page d'accueil qu'on peut envoyer des résultats
         this.state = "resultat"
         // on récupére le mode (installation ou résultats) pour afficher le bon message à l'utilisateur
@@ -57,12 +58,16 @@ export class AccueilPage {
             this.envoyer = "Vous pouvez envoyer les résultats de la course."
             // on affiche le bon bouton pour envoyer les résultats d'une course
             this.mode = "course"
-          }
+          } 
         });
 
       }
     });
 
+  }
+
+  ionViewWillEnter() {
+    this.viewCtrl.showBackButton(false);
   }
 
   public async seconnecter() {
