@@ -202,18 +202,23 @@ export class scanManager {
   public backToMainMenu() {
     this.stopScanning();
 
-    this.storage.set("mode", this.mode);
-    this.storage.set("resultat", this.infoConfig);
-
     if (this.backButtonUnregister != undefined) {
       this.backButtonUnregister();
     }
-    this.state = "before"; // seems useless
-
-    console.log("résultat -> " + JSON.stringify(this.infoConfig));
-    this.navCtrl.push(AccueilPage, {
-      resultat: this.infoConfig
-    });
+    this.state = "before"; // seems useless, yes it should be, so delete it ?
+    // on enregistre les informations de résultat
+    if (this.infoConfig != null) {
+      this.storage.ready().then(
+        () => {
+          this.storage.set("mode", this.mode);
+          this.storage.set("resultat", this.infoConfig);
+        });
+      this.navCtrl.push(AccueilPage, {
+        resultat: this.infoConfig
+      });
+    } else {
+      this.navCtrl.pop();
+    }
   }
 
   /**
