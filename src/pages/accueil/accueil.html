@@ -6,6 +6,9 @@
 
 
 <ion-content padding class="accueil">
+    <p>
+        Bienvenue sur la page d'accueil d'Oritrail
+      </p>
   <div class="user">
     <h3>Espace membre</h3>
     <p *ngIf="connecter == 'non'">
@@ -17,14 +20,9 @@
         <button ion-button (click)="sedeconnecter()">Se déconnecter</button>
     </p>
   </div>
-  <div class="run">
+  <div class="run" *ngIf="state != 'resultat'">
     <h3>Espace course</h3>
-    <p>
-      Bienvenue sur la page d'accueil d'Oritrail
-    </p>
-    <p>
-      TODO Description app
-    </p>
+     
     <p>
       <button ion-button (click)="installerCourse()">Installer une course</button>
       <button ion-button (click)="participerCourse()">Participer à une course</button>
@@ -32,13 +30,16 @@
   </div>
   <div *ngIf="state == 'resultat'">
     <div class="resultat">
-      <h3>Espace résultat/installation</h3>
+      <h3>Envoyer <span *ngIf="mode == 'course'">les résultats</span><span *ngIf="mode == 'installation'">l'installation</span></h3>
       <div>
         <p>{{envoyer}}</p>
       </div>
-      <p>
+      <p *ngIf="connecter == 'oui'">
         <button *ngIf="mode == 'course'" ion-button (click)="envoyerResultat()">Envoyer les résultats course</button>
         <button *ngIf="mode == 'installation'" ion-button (click)="envoyerInstallation()">Envoyer l'installation de la course</button>
+      </p>
+      <p *ngIf="connecter == 'non'">
+        Veuillez commencer par vous connecter pour envoyer les résultats
       </p>
     </div>
   </div>
