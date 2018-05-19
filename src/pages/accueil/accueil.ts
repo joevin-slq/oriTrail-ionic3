@@ -10,8 +10,7 @@ import { modalConnexion } from "../connexion/modalConnexion";
 import { modalEnregistrement } from "../enregistrement/modalEnregistrement";
 import { scanManager } from "../scanManager/scanManager";
 import { ViewEncapsulation } from '@angular/core'
-
-import { Observable } from 'rxjs/Observable'
+ 
 
 @Component({
   selector: "page-accueil",
