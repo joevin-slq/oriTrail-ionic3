@@ -11,6 +11,8 @@ import { modalEnregistrement } from "../enregistrement/modalEnregistrement";
 import { scanManager } from "../scanManager/scanManager";
 import { ViewEncapsulation } from '@angular/core'
 
+import { Observable } from 'rxjs/Observable'
+
 @Component({
   selector: "page-accueil",
   templateUrl: "accueil.html",
@@ -62,8 +64,16 @@ export class AccueilPage {
         });
 
       }
-    });
+      // on affiche comme quoi on est bien connecté si on arrive d'une autre vue
+      this.storage.get('userInfo').then((val) => { 
+        // si l'objet existe
+        if(val != null) {
+          this.userInfo =  "Bienvenu " + val.prenom + " "  + val.nom
+          this.connecter = "oui"
+        }
+      });
 
+    }); 
   }
 
   ionViewWillEnter() {
@@ -77,7 +87,8 @@ export class AccueilPage {
       // on met à jour la vue
       if (data == "ok") {
         this.zone.run(async () => {
-          await this.storage.get('userInfo').then((val) => { 
+          await this.storage.get('userInfo').then((val) => {
+            console.log("INFO CONNEXION : " + JSON.stringify(val) )
             this.userInfo =  "Bienvenu " + val.prenom + " "  + val.nom
           });
           this.connecter = "oui"
@@ -117,6 +128,7 @@ export class AccueilPage {
     this.zone.run(() => {
       this.storage.get('resultat').then((resultat) => {
         // TODO appel api
+        console.log("RESULTAT BRUT  : " + JSON.stringify(resultat, null, 4));
         // on supprime le bandeau si les résultats ont bien été envoyés
         this.enleverResultatAEnvoyer();
       });
@@ -132,6 +144,33 @@ export class AccueilPage {
     this.zone.run(() => {
       this.storage.get('resultat').then((resultat) => {
         // TODO appel api
+        console.log("RESULTAT BRUT  : " + JSON.stringify(resultat, null, 4));
+        // on renomme les champs pour que l'api puissent les interpréter
+        let toSend = resultat;
+        toSend.id_course = toSend.nom;
+        delete toSend.nom;
+
+        this.storage.get('userInfo').then((val) => { 
+          toSend.id_user  =  val.id_user
+        });
+
+        // on effectue la rqt
+        let data:Observable<any> = this.http.post("https://www.oritrail.fr/api/install", 
+              { toSend },
+                
+        )
+           // ok
+         data.subscribe(async result => { 
+            // TODO sauvegarder le token dans le Sotage 
+
+            console.log(JSON.stringify(result));
+
+        }, async (err) => { // on catch les erreurs potentielles
+            // DEBUG
+            console.log(JSON.stringify(err)) ;
+        }) 
+        
+
         // on supprime le bandeau si les résultats ont bien été envoyés
         this.enleverResultatAEnvoyer();
       });
