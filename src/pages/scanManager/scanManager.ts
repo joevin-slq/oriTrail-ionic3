@@ -93,7 +93,7 @@ export class scanManager {
             console.log("on vient de scanner le QR config");
             this.infoConfig = info;
             // on ajoute les balises de démarrage et de fin
-            this.infoConfig["bals"].unshift({ num: 1, nom: "Start" }); 
+            this.infoConfig["bals"].unshift({ num: 1, nom: "Start" });
             //pas de balise end en course score
             if (this.infoConfig["type"] == "P") {
               this.stopQRID = this.infoConfig["bals"].length + 1;
@@ -102,7 +102,7 @@ export class scanManager {
 
             console.log(
               "ajout de Start/Stop -> infoConfig.bals = " +
-              JSON.stringify(this.infoConfig["bals"])
+                JSON.stringify(this.infoConfig["bals"])
             );
             if (this.mode == "I") {
               // si on est en mode installation on passe directement en mode started
@@ -119,6 +119,7 @@ export class scanManager {
           if (this.isQRStart(info)) {
             this.state = "started";
             console.log("top départ");
+            this.addQR(info);
             if (this.infoConfig["type"] == "P") {
               //TODO lancer le chrono
             } else {
@@ -137,6 +138,7 @@ export class scanManager {
             //on est en mode course
             if (this.infoConfig["type"] == "S") {
               // course en type score
+              console.log("une balise a été scanner en mode course score.");
 
               if (this.addQR(info)) {
                 // ajouter les points de la balise au score total
@@ -147,6 +149,7 @@ export class scanManager {
                 this.state = "ended";
               }
             } else {
+              console.log("une balise a été scanner en mode course parcours.");
               // on est en mode parcours, les balises on un ordre préci
               this.addQROrdered(info);
               if (this.nextQRID == this.stopQRID + 1) {
@@ -209,7 +212,7 @@ export class scanManager {
 
     console.log("résultat -> " + JSON.stringify(this.infoConfig));
     this.navCtrl.push(AccueilPage, {
-          resultat: this.infoConfig
+      resultat: this.infoConfig
     });
   }
 
@@ -350,23 +353,23 @@ export class scanManager {
       returnValue = false;
       alert(
         "Vous ne pouvez pas revenir en arrière, continuer votre course vers la balise n°" +
-        this.nextQRID
+          this.nextQRID
       );
       console.log("scan d'une balise déja sauté! On l'ignore");
-
-      //apres ça on se base sur addQR();
-      returnValue = this.addQR(newQR);
     } else if (this.nextQRID < newQRID) {
       //sautage de balise, on compte les pénalités
-      //compter combien de QR il à sauter
+      //compter combien de QR il a sauter
       let count = newQRID - this.nextQRID;
       this.countQRskipped += count;
       console.log(count + " balise(s) sauté. total: " + this.countQRskipped);
+      this.nextQRID = newQRID + 1;
 
       //apres ça on se base sur addQR();
       returnValue = this.addQR(newQR);
     } else {
-      returnValue = false;
+      //apres ça on se base sur addQR();
+      returnValue = this.addQR(newQR);
+      this.nextQRID = newQRID + 1;
     }
 
     return returnValue;
@@ -381,18 +384,21 @@ export class scanManager {
     let uptimeLocal;
     await this.uptime
       .getUptime()
-      .then(function (uptime) {
-        console.log("LOCALISATION CHOPPÉ")
+      .then(function(uptime) {
+        console.log("UPTIME CHOPPÉ");
         uptimeLocal = uptime;
       })
-      .catch(function (error) {
+      .catch(function(error) {
         uptimeLocal = null;
         console.log("ERREUR de récupération uptime ! updateBaliseTimeScan()");
       });
 
     // si c'est la balise de départ on note la date de début (du téléphone ...)
-    if (idBalise == 1) { // balise de départ
-      this.infoConfig["bals"][idBalise - 1]["temps_initial"] = new Date().getTime();
+    if (idBalise == 1) {
+      // balise de départ
+      this.infoConfig["bals"][idBalise - 1][
+        "temps_initial"
+      ] = new Date().getTime();
       // ajout du temps à la balise
       this.infoConfig["bals"][idBalise - 1]["temps"] = uptimeLocal;
     }
@@ -400,8 +406,7 @@ export class scanManager {
     if (idBalise != 1) {
       // ajout du temps à la balise
       this.infoConfig["bals"][idBalise - 1]["temps"] =
-        this.infoConfig["bals"][0]["temps"]
-        - uptimeLocal;
+        this.infoConfig["bals"][0]["temps"] - uptimeLocal;
     }
 
     // DEBUG
@@ -418,16 +423,23 @@ export class scanManager {
   private async updateBalisePosition(idBalise: number) {
     console.log("updateBalisePosition");
     let position;
+    var posOptions = {
+      enableHighAccuracy: true,
+      timeout: 5000,
+      maximumAge: 0
+    };
     // on enregistre la position GPS dans la variable position
     await this.geolocation
-      .getCurrentPosition()
-      .then(function (resp) {
+      .getCurrentPosition(posOptions)
+      .then(function(resp) {
+        console.log("LOCALISATION CHOPPÉ");
+
         position = {
           latitude: resp.coords.latitude,
           longitude: resp.coords.longitude
         };
       })
-      .catch(function (error) {
+      .catch(function(error) {
         position = {
           latitude: null,
           longitude: null
@@ -442,10 +454,7 @@ export class scanManager {
     this.infoConfig["bals"][idBalise - 1]["latitude"] = position.latitude;
     console.log(
       "position ajouté dans " +
-      JSON.stringify(this.infoConfig["bals"][idBalise - 1])
+        JSON.stringify(this.infoConfig["bals"][idBalise - 1])
     );
-    // DEBUG
-    console.log("position = " + JSON.stringify(position)); 
   }
-
 }
