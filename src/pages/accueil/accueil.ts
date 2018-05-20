@@ -47,13 +47,13 @@ export class AccueilPage {
     this.storage.set("api", "http://www.oritrail.fr/api/");
 
     // debug
- 
 
-    this.zone.run(async() => {
+
+    this.zone.run(async () => {
       // si on a stocké des résultats il faut vérifier pour permettre l'envoi
       let alreadyResultat = false;
-      await this.storage.get('resultat').then((rslt) => { 
-        if(rslt != null) {
+      await this.storage.get('resultat').then((rslt) => {
+        if (rslt != null) {
           alreadyResultat = true;
         }
       });
@@ -80,7 +80,7 @@ export class AccueilPage {
       this.storage.get('userInfo').then((val) => {
         // si l'objet existe
         if (val != null) {
-          this.userInfo =  val.prenom + " " + val.nom
+          this.userInfo = val.prenom + " " + val.nom
           this.connecter = "oui"
         }
       });
@@ -90,15 +90,15 @@ export class AccueilPage {
     //this.forgetRslt();
   }
 
+  // on a pas besoin de la navigation par backboutton, donc on le désactive complétement 
+  // quand on arrive sur la vue
   ionViewWillEnter() {
-    
     this.viewCtrl.showBackButton(false);
   }
 
-  public forgetRslt() {
-       this.storage.remove("resultat");
-    this.storage.remove("mode");
-  }
+  /**
+   * Connexion depuis le modal (après réception on actualise la vue et l'état)
+   */
   public async seconnecter() {
     let profileModal = this.modalCtrl.create(modalConnexion);
     profileModal.present();
@@ -108,7 +108,7 @@ export class AccueilPage {
         this.zone.run(async () => {
           await this.storage.get('userInfo').then((val) => {
             console.log("INFO CONNEXION : " + JSON.stringify(val))
-            this.userInfo = val.prenom + " " + val.nom 
+            this.userInfo = val.prenom + " " + val.nom
           });
           this.connecter = "oui"
         })
@@ -150,7 +150,7 @@ export class AccueilPage {
         // PREPARATION JSON A ENVOYER À L'API 
         let toSend = resultat;
 
-        console.log("TO SEND : " + JSON.stringify(toSend, null, 4))
+        console.log("TO SEND ori : " + JSON.stringify(toSend, null, 4))
         /* on renomme les champs pour que l'api puissent les interpréter : */
         // renommage du champs id en id_course...
         toSend.id_course = toSend.id;
@@ -161,9 +161,18 @@ export class AccueilPage {
         });
         // récupération du token
         let token;
-        await this.storage.get('token').then((val) => { 
+        await this.storage.get('token').then((val) => {
           token = val
         });
+        // le temps initial est égal à 0
+        toSend["bals"][0]["temps"] = "00:00:00";
+
+        // on converti les temps en format "hh:mm:ss"
+        for (var i = 1; i < toSend["bals"].length ; i++) {
+           toSend["bals"][i]["temps"] = this.msToHMS(toSend["bals"][i]["temps"]);
+        }
+
+        console.log("TO SEND arrangé : " + JSON.stringify(toSend, null, 4))
 
         // ajout du token d'authentification
         // set de l'header pour la requête avec le token 
@@ -173,7 +182,7 @@ export class AccueilPage {
 
         // on effectue la rqt
         let data: Observable<any> = this.http.post("https://www.oritrail.fr/api/resultat",
-           toSend , httpOptions
+          toSend, httpOptions
 
         )
         // ok
@@ -224,7 +233,7 @@ export class AccueilPage {
         });
         // récupération du token
         let token;
-        await this.storage.get('token').then((val) => { 
+        await this.storage.get('token').then((val) => {
           token = val
         });
 
@@ -236,7 +245,7 @@ export class AccueilPage {
 
         // on effectue la rqt
         let data: Observable<any> = this.http.post("https://www.oritrail.fr/api/install",
-           toSend , httpOptions
+          toSend, httpOptions
 
         )
         // ok
@@ -272,6 +281,34 @@ export class AccueilPage {
     this.zone.run(() => {
       this.state = "before";
       this.mode = "null"
+      // on supprime également les objets du stockage
+      this.forgetRslt()
     });
   }
+
+  // suppression des objets 
+  public async forgetRslt() {
+    await this.storage.remove("resultat");
+    await this.storage.remove("mode");
+  }
+
+  /**
+   * Convertir un temps en milliseconde vers un format "hh:mm:ss"
+   * Ajout de round 
+   * origine : https://tinyurl.com/ybva68zf
+   * @param ms 
+   */
+  public msToHMS(ms) {
+    // 1- Convert to seconds:
+    let seconds = ms / 1000;
+    // 2- Extract hours:
+    let hours = Number(seconds / 3600); // 3,600 seconds in 1 hour
+    seconds = seconds % 3600; // seconds remaining after extracting hours
+    // 3- Extract minutes:
+    let minutes = Number(seconds / 60); // 60 seconds in 1 minute
+    // 4- Keep only seconds not extracted to minutes:
+    seconds = seconds % 60;
+    return Math.round(hours) + ":" + Math.round(minutes) + ":" + Math.round(seconds) 
+  }
+
 }
