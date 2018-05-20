@@ -1,14 +1,15 @@
 import { Component, NgZone } from "@angular/core";
 
 import { Storage } from "@ionic/storage";
-import { HttpClient } from "@angular/common/http";
- 
+import { HttpClient, HttpHeaders } from "@angular/common/http";
+
 import { ModalController, NavController, NavParams, ViewController } from "ionic-angular";
 
 import { modalConnexion } from "../connexion/modalConnexion";
 import { modalEnregistrement } from "../enregistrement/modalEnregistrement";
 import { scanManager } from "../scanManager/scanManager";
 import { ViewEncapsulation } from '@angular/core'
+import { ToastController } from "ionic-angular";
 
 import { Observable } from 'rxjs/Observable'
 
@@ -39,14 +40,15 @@ export class AccueilPage {
     public navCtrl: NavController,
     public zone: NgZone,
     public navparams: NavParams,
+    public toastCtrl: ToastController,
     private viewCtrl: ViewController
   ) {
     //set a key/value
     this.storage.set("api", "http://www.oritrail.fr/api/");
 
-    this.zone.run(() => { 
+    this.zone.run(() => {
       // si on a des résultat à envoyer (paramètre de navigation de la vue depuis scanManager) 
-      if (navparams.get("resultat") != null) {  
+      if (navparams.get("resultat") != null) {
         // on affiche sur la page d'accueil qu'on peut envoyer des résultats
         this.state = "resultat"
         // on récupére le mode (installation ou résultats) pour afficher le bon message à l'utilisateur
@@ -59,20 +61,20 @@ export class AccueilPage {
             this.envoyer = "Vous pouvez envoyer les résultats de la course."
             // on affiche le bon bouton pour envoyer les résultats d'une course
             this.mode = "course"
-          } 
+          }
         });
 
       }
       // on affiche comme quoi on est bien connecté si on arrive d'une autre vue
-      this.storage.get('userInfo').then((val) => { 
+      this.storage.get('userInfo').then((val) => {
         // si l'objet existe
-        if(val != null) {
-          this.userInfo =  "Bienvenu " + val.prenom + " "  + val.nom
+        if (val != null) {
+          this.userInfo =  val.prenom + " " + val.nom
           this.connecter = "oui"
         }
       });
 
-    }); 
+    });
   }
 
   ionViewWillEnter() {
@@ -87,8 +89,8 @@ export class AccueilPage {
       if (data == "ok") {
         this.zone.run(async () => {
           await this.storage.get('userInfo').then((val) => {
-            console.log("INFO CONNEXION : " + JSON.stringify(val) )
-            this.userInfo =  "Bienvenu " + val.prenom + " "  + val.nom
+            console.log("INFO CONNEXION : " + JSON.stringify(val))
+            this.userInfo = val.prenom + " " + val.nom 
           });
           this.connecter = "oui"
         })
@@ -142,36 +144,58 @@ export class AccueilPage {
 
     this.zone.run(() => {
       this.storage.get('resultat').then((resultat) => {
-        // TODO appel api
         console.log("RESULTAT BRUT  : " + JSON.stringify(resultat, null, 4));
+        // PREPARATION JSON A ENVOYER À L'API
         // on renomme les champs pour que l'api puissent les interpréter
         let toSend = resultat;
-        toSend.id_course = toSend.nom;
-        delete toSend.nom;
-
-        this.storage.get('userInfo').then((val) => { 
-          toSend.id_user  =  val.id_user
+        // renommage du champs id en id_course...
+        toSend.id_course = toSend.id;
+        delete toSend.id;
+        // ajout de l'id utilisateur 
+        this.storage.get('userInfo').then((val) => {
+          toSend.id_user = val.id_user
+        });
+        // récupération du token
+        let token;
+        this.storage.get('token').then((val) => {
+          token = val
         });
 
-        // on effectue la rqt
-        let data:Observable<any> = this.http.post("https://www.oritrail.fr/api/install", 
-              { toSend },
-                
-        )
-           // ok
-         data.subscribe(async result => { 
-            // TODO sauvegarder le token dans le Sotage 
+        // ajout du token d'authentification
+        // set de l'header pour la requête avec le token 
+        const httpOptions = {
+          headers: new HttpHeaders().set('Authorization', "Bearer " + token)
+        };
 
-            console.log(JSON.stringify(result));
+        // on effectue la rqt
+        let data: Observable<any> = this.http.post("https://www.oritrail.fr/api/install",
+          { toSend }, httpOptions
+
+        )
+        // ok
+        data.subscribe(async result => { // DONNÉES BIEN ENVOYÉES
+          let toast = this.toastCtrl.create({
+            message: `Les données d'installation ont correctement été envoyées.`,
+            duration: 4000
+          });
+          toast.present();
+
+          console.log("RÉPONSE ENVOIE INSTALLATION : " + JSON.stringify(result));
+          // on supprime le bandeau si les résultats ont bien été envoyés
+          this.enleverResultatAEnvoyer();
 
         }, async (err) => { // on catch les erreurs potentielles
-            // DEBUG
-            console.log(JSON.stringify(err)) ;
-        }) 
-        
+          // DEBUG
+          let toast = this.toastCtrl.create({
+            message: `Une erreur s'est produit à l'envoi des données, veuillez réessayer.`,
+            duration: 4000
+          });
+          toast.present();
+          console.log(JSON.stringify(err));
+        })
 
-        // on supprime le bandeau si les résultats ont bien été envoyés
-        this.enleverResultatAEnvoyer();
+
+
       });
     });
 
