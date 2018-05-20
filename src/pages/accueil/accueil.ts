@@ -2,15 +2,15 @@ import { Component, NgZone } from "@angular/core";
 
 import { Storage } from "@ionic/storage";
 import { HttpClient } from "@angular/common/http";
-
-import { Observable } from "rxjs/Observable";
+ 
 import { ModalController, NavController, NavParams, ViewController } from "ionic-angular";
 
 import { modalConnexion } from "../connexion/modalConnexion";
 import { modalEnregistrement } from "../enregistrement/modalEnregistrement";
 import { scanManager } from "../scanManager/scanManager";
 import { ViewEncapsulation } from '@angular/core'
- 
+
+import { Observable } from 'rxjs/Observable'
 
 @Component({
   selector: "page-accueil",

@@ -91,7 +91,6 @@
     <allow-navigation href="http://192.168.43.41:8100" />
     <engine name="android" spec="^7.1.0" />
     <engine name="browser" spec="5.0.3" />
-    <engine name="ios" spec="^4.5.4" />
     <plugin name="cordova-plugin-advanced-geolocation" spec="^1.6.2" />
     <plugin name="cordova-plugin-camera" spec="^4.0.3" />
     <plugin name="cordova-plugin-device" spec="^2.0.2" />
@@ -107,4 +106,5 @@
     <plugin name="cordova-plugin-geolocation" spec="^4.0.1">
         <variable name="GEOLOCATION_USAGE_DESCRIPTION" value="To locate you and get the current time" />
     </plugin>
+    <engine name="ios" spec="~4.5.4" />
 </widget>
