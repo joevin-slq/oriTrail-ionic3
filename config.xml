@@ -81,7 +81,7 @@
     <allow-navigation href="http://192.168.0.12:8100" />
     <allow-navigation href="http://172.20.10.4:8100" />
     <edit-config file="*-Info.plist" mode="merge" target="NSLocationWhenInUseUsageDescription">
-        <string>We want your location! Best regards NSA</string>
+        <string>To locate you and get the current time</string>
     </edit-config>
     <allow-navigation href="http://172.20.10.4:8101" />
     <allow-navigation href="http://192.168.0.14:8101" />
@@ -89,8 +89,7 @@
     <allow-navigation href="http://192.168.0.10:8100" />
     <allow-navigation href="http://192.168.0.6:8100" />
     <allow-navigation href="http://192.168.43.41:8100" />
-    <engine name="android" spec="^7.1.0" />
-    <engine name="browser" spec="5.0.3" />
+
     <plugin name="cordova-plugin-advanced-geolocation" spec="^1.6.2" />
     <plugin name="cordova-plugin-camera" spec="^4.0.3" />
     <plugin name="cordova-plugin-device" spec="^2.0.2" />
@@ -106,5 +105,7 @@
     <plugin name="cordova-plugin-geolocation" spec="^4.0.1">
         <variable name="GEOLOCATION_USAGE_DESCRIPTION" value="To locate you and get the current time" />
     </plugin>
-    <engine name="ios" spec="~4.5.4" />
+    <engine name="android" spec="^7.1.0" />
+    <engine name="browser" spec="5.0.3" />
+    <engine name="ios" spec="^4.5.4" />
 </widget>
