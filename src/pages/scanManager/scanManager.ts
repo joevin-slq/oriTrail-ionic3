@@ -102,7 +102,7 @@ export class scanManager {
 
             console.log(
               "ajout de Start/Stop -> infoConfig.bals = " +
-                JSON.stringify(this.infoConfig["bals"])
+              JSON.stringify(this.infoConfig["bals"])
             );
             if (this.mode == "I") {
               // si on est en mode installation on passe directement en mode started
@@ -122,8 +122,12 @@ export class scanManager {
             this.addQR(info);
             if (this.infoConfig["type"] == "P") {
               //TODO lancer le chrono
+              // TODO passer le temps que doit faire le timer et le prendre en compte dans la fonction
+              this.startStopwatch()
             } else {
               //TODO lancer le countdown
+              // TODO passer le temps que doit faire le timer et le prendre en compte dans la fonction
+              this.startTimer()
             }
           }
         } else if (this.state == "started") {
@@ -171,6 +175,52 @@ export class scanManager {
     });
   }
 
+  public startStopwatch() {
+    this.countdownWatch("stopwatch", 1, 1, true);
+  }
+
+  public startTimer()  {
+    this.countdownWatch("timer", 1, 1, false);
+  }
+
+  /**
+   * Permet de créer un timer ou un chronomètre
+   * @param elementName l'élement a actualiser dans le code
+   * @param minutes 
+   * @param seconds 
+   * @param stopwatch 
+   */
+  public countdownWatch(elementName, minutes, seconds, stopwatch: boolean) {
+    var element, endTime, hours, mins, msLeft, time;
+
+    function twoDigits(n) {
+      return (n <= 9 ? "0" + n : n);
+    }
+
+    function updateTimer() {
+      if(stopwatch) {
+        msLeft = endTime + (+new Date);
+      } else {
+        msLeft = endTime - (+new Date);
+      }
+      
+      if (msLeft < 1000) {
+        element.innerHTML = "countdown's over!";
+      } else {
+        time = new Date(msLeft);
+        hours = time.getUTCHours();
+        mins = time.getUTCMinutes();
+        element.innerHTML = (hours ? hours + ':' + twoDigits(mins) : mins) + ':' + twoDigits(time.getUTCSeconds());
+        setTimeout(updateTimer, time.getUTCMilliseconds() + 500);
+      }
+    }
+
+    element = document.getElementById(elementName);
+    endTime = (+new Date) + 1000 * (60 * minutes + seconds) + 500;
+    updateTimer();
+  }
+
+
   public startScanning() {
     console.log("startScanning()");
     this.eventsManager.publish("scanManager:startScanning");
@@ -199,6 +249,9 @@ export class scanManager {
     this.state = "before";
   }
 
+  /**
+   * TODO : problème ici, parfois après le retour sur l'accueil la caméra fonctionne toujours (et fond transparent /:)
+   */
   public backToMainMenu() {
     this.stopScanning();
 
@@ -358,7 +411,7 @@ export class scanManager {
       returnValue = false;
       alert(
         "Vous ne pouvez pas revenir en arrière, continuer votre course vers la balise n°" +
-          this.nextQRID
+        this.nextQRID
       );
       console.log("scan d'une balise déja sauté! On l'ignore");
     } else if (this.nextQRID < newQRID) {
@@ -389,11 +442,11 @@ export class scanManager {
     let uptimeLocal;
     await this.uptime
       .getUptime()
-      .then(function(uptime) {
+      .then(function (uptime) {
         console.log("UPTIME CHOPPÉ");
         uptimeLocal = uptime;
       })
-      .catch(function(error) {
+      .catch(function (error) {
         uptimeLocal = null;
         console.log("ERREUR de récupération uptime ! updateBaliseTimeScan()");
       });
@@ -436,7 +489,7 @@ export class scanManager {
     // on enregistre la position GPS dans la variable position
     await this.geolocation
       .getCurrentPosition(posOptions)
-      .then(function(resp) {
+      .then(function (resp) {
         console.log("LOCALISATION CHOPPÉ");
 
         position = {
@@ -444,7 +497,7 @@ export class scanManager {
           longitude: resp.coords.longitude
         };
       })
-      .catch(function(error) {
+      .catch(function (error) {
         position = {
           latitude: null,
           longitude: null
@@ -459,7 +512,7 @@ export class scanManager {
     this.infoConfig["bals"][idBalise - 1]["latitude"] = position.latitude;
     console.log(
       "position ajouté dans " +
-        JSON.stringify(this.infoConfig["bals"][idBalise - 1])
+      JSON.stringify(this.infoConfig["bals"][idBalise - 1])
     );
   }
 }

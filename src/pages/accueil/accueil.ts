@@ -143,7 +143,7 @@ export class AccueilPage {
   public envoyerInstallation() {
 
     this.zone.run(() => {
-      this.storage.get('resultat').then((resultat) => {
+      this.storage.get('resultat').then(async (resultat) => {
         console.log("RESULTAT BRUT  : " + JSON.stringify(resultat, null, 4));
         // PREPARATION JSON A ENVOYER À L'API
         // on renomme les champs pour que l'api puissent les interpréter
@@ -152,14 +152,16 @@ export class AccueilPage {
         toSend.id_course = toSend.id;
         delete toSend.id;
         // ajout de l'id utilisateur 
-        this.storage.get('userInfo').then((val) => {
+        await this.storage.get('userInfo').then((val) => {
           toSend.id_user = val.id_user
         });
         // récupération du token
         let token;
-        this.storage.get('token').then((val) => {
+        await this.storage.get('token').then((val) => { 
           token = val
         });
+  
+        console.log("OBJET FINAL A ENVOYER : " + JSON.stringify(toSend, null, 4))
 
         // ajout du token d'authentification
         // set de l'header pour la requête avec le token 
