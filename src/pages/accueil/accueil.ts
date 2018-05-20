@@ -46,9 +46,20 @@ export class AccueilPage {
     //set a key/value
     this.storage.set("api", "http://www.oritrail.fr/api/");
 
-    this.zone.run(() => {
+    // debug
+ 
+
+    this.zone.run(async() => {
+      // si on a stocké des résultats il faut vérifier pour permettre l'envoi
+      let alreadyResultat = false;
+      await this.storage.get('resultat').then((rslt) => { 
+        if(rslt != null) {
+          alreadyResultat = true;
+        }
+      });
       // si on a des résultat à envoyer (paramètre de navigation de la vue depuis scanManager) 
-      if (navparams.get("resultat") != null) {
+      // ou si il y avait déjà des résultats présent
+      if (navparams.get("resultat") != null || alreadyResultat) {
         // on affiche sur la page d'accueil qu'on peut envoyer des résultats
         this.state = "resultat"
         // on récupére le mode (installation ou résultats) pour afficher le bon message à l'utilisateur
@@ -75,12 +86,19 @@ export class AccueilPage {
       });
 
     });
+    // debug
+    //this.forgetRslt();
   }
 
   ionViewWillEnter() {
+    
     this.viewCtrl.showBackButton(false);
   }
 
+  public forgetRslt() {
+       this.storage.remove("resultat");
+    this.storage.remove("mode");
+  }
   public async seconnecter() {
     let profileModal = this.modalCtrl.create(modalConnexion);
     profileModal.present();
@@ -127,27 +145,13 @@ export class AccueilPage {
   public envoyerResultat() {
 
     this.zone.run(() => {
-      this.storage.get('resultat').then((resultat) => {
-        // TODO appel api
-        console.log("RESULTAT BRUT  : " + JSON.stringify(resultat, null, 4));
-        // on supprime le bandeau si les résultats ont bien été envoyés
-        this.enleverResultatAEnvoyer();
-      });
-
-    });
-  }
-
-  /**
-   * Permet d'envoyer les résultats d'une installation à l'api
-   */
-  public envoyerInstallation() {
-
-    this.zone.run(() => {
+      // on récupére les résultats à renvoyer
       this.storage.get('resultat').then(async (resultat) => {
-        console.log("RESULTAT BRUT  : " + JSON.stringify(resultat, null, 4));
-        // PREPARATION JSON A ENVOYER À L'API
-        // on renomme les champs pour que l'api puissent les interpréter
+        // PREPARATION JSON A ENVOYER À L'API 
         let toSend = resultat;
+
+        console.log("TO SEND : " + JSON.stringify(toSend, null, 4))
+        /* on renomme les champs pour que l'api puissent les interpréter : */
         // renommage du champs id en id_course...
         toSend.id_course = toSend.id;
         delete toSend.id;
@@ -160,8 +164,69 @@ export class AccueilPage {
         await this.storage.get('token').then((val) => { 
           token = val
         });
-  
-        console.log("OBJET FINAL A ENVOYER : " + JSON.stringify(toSend, null, 4))
+
+        // ajout du token d'authentification
+        // set de l'header pour la requête avec le token 
+        const httpOptions = {
+          headers: new HttpHeaders().set('Authorization', "Bearer " + token)
+        };
+
+        // on effectue la rqt
+        let data: Observable<any> = this.http.post("https://www.oritrail.fr/api/resultat",
+           toSend , httpOptions
+
+        )
+        // ok
+        data.subscribe(async result => { // DONNÉES BIEN ENVOYÉES
+          let toast = this.toastCtrl.create({
+            message: `Les données d'installation ont correctement été envoyées.`,
+            duration: 4000
+          });
+          toast.present();
+
+          console.log("RÉPONSE ENVOIE INSTALLATION : " + JSON.stringify(result));
+          // on supprime le bandeau si les résultats ont bien été envoyés
+          this.enleverResultatAEnvoyer();
+
+        }, async (err) => { // on catch les erreurs potentielles
+          // DEBUG
+          let toast = this.toastCtrl.create({
+            message: `Une erreur s'est produit à l'envoi des données, veuillez réessayer.`,
+            duration: 4000
+          });
+          toast.present();
+          console.log(JSON.stringify(err));
+        })
+
+
+
+      });
+    });
+  }
+
+  /**
+   * Permet d'envoyer les résultats d'une installation à l'api
+   */
+  public envoyerInstallation() {
+
+    this.zone.run(() => {
+      // on récupére les résultats à renvoyer
+      this.storage.get('resultat').then(async (resultat) => {
+        // PREPARATION JSON A ENVOYER À L'API 
+        let toSend = resultat;
+        /* on renomme les champs pour que l'api puissent les interpréter : */
+        // renommage du champs id en id_course...
+        toSend.id_course = toSend.id;
+        delete toSend.id;
+        // ajout de l'id utilisateur 
+        await this.storage.get('userInfo').then((val) => {
+          toSend.id_user = val.id_user
+        });
+        // récupération du token
+        let token;
+        await this.storage.get('token').then((val) => { 
+          token = val
+        });
 
         // ajout du token d'authentification
         // set de l'header pour la requête avec le token 
@@ -171,7 +236,7 @@ export class AccueilPage {
 
         // on effectue la rqt
         let data: Observable<any> = this.http.post("https://www.oritrail.fr/api/install",
-          { toSend }, httpOptions
+           toSend , httpOptions
 
         )
         // ok

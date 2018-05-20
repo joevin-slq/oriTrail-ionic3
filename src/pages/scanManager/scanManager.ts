@@ -123,11 +123,11 @@ export class scanManager {
             if (this.infoConfig["type"] == "P") {
               //TODO lancer le chrono
               // TODO passer le temps que doit faire le timer et le prendre en compte dans la fonction
-              this.startStopwatch()
+
             } else {
               //TODO lancer le countdown
               // TODO passer le temps que doit faire le timer et le prendre en compte dans la fonction
-              this.startTimer()
+
             }
           }
         } else if (this.state == "started") {
@@ -152,9 +152,9 @@ export class scanManager {
                 //TODO stopper le countdown
                 this.state = "ended";
               }
-            } else {
+            } else { // on est en mode parcours
               console.log("une balise a été scanner en mode course parcours.");
-              // on est en mode parcours, les balises on un ordre préci
+              // on est en mode parcours, les balises ont un ordre
               this.addQROrdered(info);
               if (this.nextQRID == this.stopQRID + 1) {
                 //TODO stoper le chrono
@@ -174,52 +174,6 @@ export class scanManager {
       }
     });
   }
-
-  public startStopwatch() {
-    this.countdownWatch("stopwatch", 1, 1, true);
-  }
-
-  public startTimer()  {
-    this.countdownWatch("timer", 1, 1, false);
-  }
-
-  /**
-   * Permet de créer un timer ou un chronomètre
-   * @param elementName l'élement a actualiser dans le code
-   * @param minutes 
-   * @param seconds 
-   * @param stopwatch 
-   */
-  public countdownWatch(elementName, minutes, seconds, stopwatch: boolean) {
-    var element, endTime, hours, mins, msLeft, time;
-
-    function twoDigits(n) {
-      return (n <= 9 ? "0" + n : n);
-    }
-
-    function updateTimer() {
-      if(stopwatch) {
-        msLeft = endTime + (+new Date);
-      } else {
-        msLeft = endTime - (+new Date);
-      }
-      
-      if (msLeft < 1000) {
-        element.innerHTML = "countdown's over!";
-      } else {
-        time = new Date(msLeft);
-        hours = time.getUTCHours();
-        mins = time.getUTCMinutes();
-        element.innerHTML = (hours ? hours + ':' + twoDigits(mins) : mins) + ':' + twoDigits(time.getUTCSeconds());
-        setTimeout(updateTimer, time.getUTCMilliseconds() + 500);
-      }
-    }
-
-    element = document.getElementById(elementName);
-    endTime = (+new Date) + 1000 * (60 * minutes + seconds) + 500;
-    updateTimer();
-  }
-
 
   public startScanning() {
     console.log("startScanning()");
@@ -409,10 +363,10 @@ export class scanManager {
     //vérifier que newQR est le prochain QR code la course
     if (this.nextQRID > newQRID) {
       returnValue = false;
-      alert(
+      /*alert(
         "Vous ne pouvez pas revenir en arrière, continuer votre course vers la balise n°" +
         this.nextQRID
-      );
+      );*/
       console.log("scan d'une balise déja sauté! On l'ignore");
     } else if (this.nextQRID < newQRID) {
       //sautage de balise, on compte les pénalités
@@ -443,7 +397,7 @@ export class scanManager {
     await this.uptime
       .getUptime()
       .then(function (uptime) {
-        console.log("UPTIME CHOPPÉ");
+        console.log("UPTIME RÉCUPÉRÉE");
         uptimeLocal = uptime;
       })
       .catch(function (error) {
@@ -454,17 +408,20 @@ export class scanManager {
     // si c'est la balise de départ on note la date de début (du téléphone ...)
     if (idBalise == 1) {
       // balise de départ
-      this.infoConfig["bals"][idBalise - 1][
+      this.infoConfig["bals"][0][
         "temps_initial"
       ] = new Date().getTime();
       // ajout du temps à la balise
-      this.infoConfig["bals"][idBalise - 1]["temps"] = uptimeLocal;
+      this.infoConfig["bals"][0]["temps"] = uptimeLocal;
     }
     // si c'est une balise autre que le départ ou soustrait l'uptime de celle de départ
-    if (idBalise != 1) {
+    if (idBalise >= 2) {
       // ajout du temps à la balise
+
       this.infoConfig["bals"][idBalise - 1]["temps"] =
-        this.infoConfig["bals"][0]["temps"] - uptimeLocal;
+        Number(uptimeLocal) - Number(this.infoConfig["bals"][0]["temps"]);
+
+
     }
 
     // DEBUG
