@@ -16,13 +16,13 @@
       <button ion-button (click)="sinscrire()">S'enregistrer</button>
     </p>
     <p *ngIf="connecter == 'oui'">
-        Bienvenu <b>{{userInfo}}</b> !
+        Bienvenue <b>{{userInfo}}</b> !
         <button ion-button (click)="sedeconnecter()">Se déconnecter</button>
     </p>
   </div>
   <div class="run" *ngIf="state != 'resultat'">
     <h3>Espace course</h3>
-     
+
     <p>
       <button ion-button (click)="installerCourse()">Installer une course</button>
       <button ion-button (click)="participerCourse()">Participer à une course</button>

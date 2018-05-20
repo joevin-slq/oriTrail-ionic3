@@ -141,11 +141,10 @@ export class scanManager {
               let seconds;
               //two cases, depending on how QRconfig format that shit
               if (a.length == 2) {
-                seconds = +a[0] * 60 * 60 + +a[1] * 60;
-              } else if (a.length == 3) {
-                // minutes are worth 60 seconds. Hours are worth 60 minutes.
-                seconds = +a[0] * 60 * 60 + +a[1] * 60 + +a[2];
+                a[2] = "00";
               }
+              // minutes are worth 60 seconds. Hours are worth 60 minutes.
+              seconds = +a[0] * 60 * 60 + +a[1] * 60 + +a[2];
 
               console.log("seconds = " + seconds);
               if (seconds != null) {
@@ -155,8 +154,10 @@ export class scanManager {
                 }, seconds * 1000);
               }
               // TODO passer le temps que doit faire le timer et le prendre en compte dans la fonction
-              this.countdownWatch(a[0], a[1], false);
+              this.countdownWatch(0, seconds, false);
             }
+          } else {
+            this.eventsManager.publish("scanManager:startScanning");
           }
         } else if (this.state == "started") {
           if (this.mode == "I") {
@@ -180,10 +181,12 @@ export class scanManager {
             }
           }
         }
+      } else {
+        this.eventsManager.publish("scanManager:startScanning");
       }
       //console.log("infoConfig = " + JSON.stringify(this.infoConfig));
 
-      if(this.state == "config"){
+      if (this.state == "config") {
         this.eventsManager.publish("scanManager:startScanning");
       }
     });
@@ -234,7 +237,7 @@ export class scanManager {
       setTimeout(this.updateTimer, this.watchTime.getUTCMilliseconds() + 500);
     }
   }
-  //----- Watch --------
+  //----- /Watch --------
 
   public startScanning() {
     console.log("startScanning()");
@@ -422,6 +425,7 @@ export class scanManager {
   private addQR(newQR: object): boolean {
     // vérifier que le QR est pas déja scanné
     if (this.isIDAlreadyScanned(newQR["num"])) {
+      this.eventsManager.publish("scanManager:startScanning");
       // si il est déja dans la liste, on retourne false.
       return false;
     } else {
@@ -449,6 +453,7 @@ export class scanManager {
           this.nextQRID
       );*/
       console.log("scan d'une balise déja sauté! On l'ignore");
+      this.eventsManager.publish("scanManager:startScanning");
     } else if (this.nextQRID < newQRID) {
       //sautage de balise, on compte les pénalités
       //compter combien de QR il a sauter
@@ -477,7 +482,7 @@ export class scanManager {
     let uptimeLocal;
     await this.uptime
       .getUptime()
-      .then(function (uptime) {
+      .then(function(uptime) {
         console.log("UPTIME RÉCUPÉRÉE");
         uptimeLocal = uptime;
       })
@@ -489,9 +494,7 @@ export class scanManager {
     // si c'est la balise de départ on note la date de début (du téléphone ...)
     if (idBalise == 1) {
       // balise de départ
-      this.infoConfig["bals"][0][
-        "temps_initial"
-      ] = new Date().getTime();
+      this.infoConfig["bals"][0]["temps_initial"] = new Date().getTime();
       // ajout du temps à la balise
       this.infoConfig["bals"][0]["temps"] = uptimeLocal;
     }
@@ -501,8 +504,6 @@ export class scanManager {
 
       this.infoConfig["bals"][idBalise - 1]["temps"] =
         Number(uptimeLocal) - Number(this.infoConfig["bals"][0]["temps"]);
-
-
     }
 
     // DEBUG
