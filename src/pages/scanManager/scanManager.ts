@@ -7,6 +7,7 @@ import { Service } from "../../utils/services";
 import { ToastController } from "ionic-angular";
 import { Uptime } from "@ionic-native/uptime";
 import { AccueilPage } from "../accueil/accueil";
+import { Config } from "ionic-angular/config/config";
 
 @Component({
   selector: "scanManager",
@@ -30,9 +31,11 @@ export class scanManager {
   public nextQRID: number = 2;
   public countQRskipped: number = 0;
   private stopQRID;
+  public displayedTimer: string = "";
 
   private eventsManager: Events;
   private backButtonUnregister: Function;
+  private timeout;
 
   constructor(
     private geolocation: Geolocation,
@@ -93,7 +96,7 @@ export class scanManager {
             console.log("on vient de scanner le QR config");
             this.infoConfig = info;
             // on ajoute les balises de démarrage et de fin
-            this.infoConfig["bals"].unshift({ num: 1, nom: "Start" });
+            this.infoConfig["bals"].unshift({ num: 1, nom: "Start", val: 0 });
             //pas de balise end en course score
             if (this.infoConfig["type"] == "P") {
               this.stopQRID = this.infoConfig["bals"].length + 1;
@@ -102,7 +105,7 @@ export class scanManager {
 
             console.log(
               "ajout de Start/Stop -> infoConfig.bals = " +
-              JSON.stringify(this.infoConfig["bals"])
+                JSON.stringify(this.infoConfig["bals"])
             );
             if (this.mode == "I") {
               // si on est en mode installation on passe directement en mode started
@@ -113,6 +116,7 @@ export class scanManager {
               this.state = "ready";
               console.log("on est en mode course");
             }
+            this.eventsManager.publish("scanManager:startScanning");
           }
         } else if (this.state == "ready") {
           // on passe dans ce cas seulement si on est en mode course
@@ -121,13 +125,37 @@ export class scanManager {
             console.log("top départ");
             this.addQR(info);
             if (this.infoConfig["type"] == "P") {
-              //TODO lancer le chrono
+              // lancer le chrono
               // TODO passer le temps que doit faire le timer et le prendre en compte dans la fonction
-
+              this.countdownWatch(0, 0, true);
             } else {
-              //TODO lancer le countdown
-              // TODO passer le temps que doit faire le timer et le prendre en compte dans la fonction
+              //lancement de la callback qui limite le temps de scan
+              // var time = this.infoConfig.timp;
+              //format should be "HH:MM" or "HH:MM:SS"
+              console.log(
+                "this.infoConfig.timp = " + JSON.stringify(this.infoConfig.timp)
+              );
+              var time = "00:02:20";
+              var a = time.split(":"); // split it at the colons
 
+              let seconds;
+              //two cases, depending on how QRconfig format that shit
+              if (a.length == 2) {
+                seconds = +a[0] * 60 * 60 + +a[1] * 60;
+              } else if (a.length == 3) {
+                // minutes are worth 60 seconds. Hours are worth 60 minutes.
+                seconds = +a[0] * 60 * 60 + +a[1] * 60 + +a[2];
+              }
+
+              console.log("seconds = " + seconds);
+              if (seconds != null) {
+                // lancer le countdown
+                this.timeout = setTimeout(() => {
+                  this.backToMainMenu();
+                }, seconds * 1000);
+              }
+              // TODO passer le temps que doit faire le timer et le prendre en compte dans la fonction
+              this.countdownWatch(a[0], a[1], false);
             }
           }
         } else if (this.state == "started") {
@@ -135,9 +163,6 @@ export class scanManager {
             console.log("on vient de scanner un QR durant l'installation");
             //On vient de scanner une balise
             this.addQR(info);
-            if (this.allQRScanned()) {
-              this.state = "ended";
-            }
           } else {
             //on est en mode course
             if (this.infoConfig["type"] == "S") {
@@ -148,32 +173,68 @@ export class scanManager {
                 // ajouter les points de la balise au score total
                 this.score += info["val"];
               }
-              if (this.allQRScanned()) {
-                //TODO stopper le countdown
-                this.state = "ended";
-              }
-            } else { // on est en mode parcours
+            } else {
               console.log("une balise a été scanner en mode course parcours.");
-              // on est en mode parcours, les balises ont un ordre
+              // on est en mode parcours, les balises on un ordre précis
               this.addQROrdered(info);
-              if (this.nextQRID == this.stopQRID + 1) {
-                //TODO stoper le chrono
-                this.state = "ended";
-              }
             }
           }
         }
       }
       //console.log("infoConfig = " + JSON.stringify(this.infoConfig));
 
-      // state ended -> on termine immédiatement sinon on attends un nouveau scan
-      if (this.state != "ended") {
+      if(this.state == "config"){
         this.eventsManager.publish("scanManager:startScanning");
-      } else {
-        this.backToMainMenu();
       }
     });
   }
+  // -------- watch ----------
+  /**
+   * Permet de créer un timer ou un chronomètre
+   * @param minutes
+   * @param seconds
+   * @param stopwatch
+   */
+  private watchEndTime;
+  private watchHours;
+  private watchMins;
+  private watchMsLeft;
+  private watchTime;
+  private watchStopWatch: boolean;
+
+  private countdownWatch(minutes, seconds, stopwatch: boolean) {
+    this.watchStopWatch = stopwatch;
+    this.watchEndTime = +new Date() + 1000 * (60 * minutes + seconds) + 500;
+    this.updateTimer();
+  }
+
+  private twoDigits(n) {
+    return n <= 9 ? "0" + n : n;
+  }
+
+  private updateTimer() {
+    if (this.watchStopWatch) {
+      this.watchMsLeft = this.watchEndTime + +new Date();
+    } else {
+      this.watchMsLeft = this.watchEndTime - +new Date();
+    }
+
+    if (this.watchMsLeft < 1000) {
+      this.displayedTimer = "countdown's over!";
+    } else {
+      this.watchTime = new Date(this.watchMsLeft);
+      this.watchHours = this.watchTime.getUTCHours();
+      this.watchMins = this.watchTime.getUTCMinutes();
+      this.displayedTimer =
+        (this.watchHours
+          ? this.watchHours + ":" + this.twoDigits(this.watchMins)
+          : this.watchMins) +
+        ":" +
+        this.twoDigits(this.watchTime.getUTCSeconds());
+      setTimeout(this.updateTimer, this.watchTime.getUTCMilliseconds() + 500);
+    }
+  }
+  //----- Watch --------
 
   public startScanning() {
     console.log("startScanning()");
@@ -215,11 +276,10 @@ export class scanManager {
     this.state = "before"; // seems useless, yes it should be, so delete it ?
     // on enregistre les informations de résultat
     if (this.infoConfig != null) {
-      this.storage.ready().then(
-        () => {
-          this.storage.set("mode", this.mode);
-          this.storage.set("resultat", this.infoConfig);
-        });
+      this.storage.ready().then(() => {
+        this.storage.set("mode", this.mode);
+        this.storage.set("resultat", this.infoConfig);
+      });
       this.navCtrl.push(AccueilPage, {
         resultat: this.infoConfig
       });
@@ -312,7 +372,7 @@ export class scanManager {
   }
 
   // retourne: est-ce que toutes les balises on été scanné ? (y compris la balise fin)
-  private allQRScanned(): boolean {
+  private allQRScanned() {
     // comparer les balise à scanner et les balise scanné
     let areAllQRScanned = true;
     for (let element of this.infoConfig.bals) {
@@ -321,8 +381,29 @@ export class scanManager {
       }
     }
 
+    if (!areAllQRScanned && this.mode == "P") {
+      if (this.nextQRID == this.stopQRID + 1) {
+        areAllQRScanned = true;
+      }
+    }
+
     console.log("allQRScanned() returning -> " + areAllQRScanned);
-    return areAllQRScanned;
+    if (areAllQRScanned) {
+      if (this.mode == "C" && this.infoConfig.type == "S") {
+        // stopper le countdown
+        clearTimeout(this.timeout);
+        this.infoConfig["score"] = this.score;
+      }
+      this.state = "ended";
+    }
+    console.log("infoconfig = " + JSON.stringify(this.infoConfig));
+
+    // state ended -> on termine immédiatement sinon on attends un nouveau scan
+    if (this.state != "ended") {
+      this.eventsManager.publish("scanManager:startScanning");
+    } else {
+      this.backToMainMenu();
+    }
   }
 
   //@param un ID de balise
@@ -365,7 +446,7 @@ export class scanManager {
       returnValue = false;
       /*alert(
         "Vous ne pouvez pas revenir en arrière, continuer votre course vers la balise n°" +
-        this.nextQRID
+          this.nextQRID
       );*/
       console.log("scan d'une balise déja sauté! On l'ignore");
     } else if (this.nextQRID < newQRID) {
@@ -400,7 +481,7 @@ export class scanManager {
         console.log("UPTIME RÉCUPÉRÉE");
         uptimeLocal = uptime;
       })
-      .catch(function (error) {
+      .catch(function(error) {
         uptimeLocal = null;
         console.log("ERREUR de récupération uptime ! updateBaliseTimeScan()");
       });
@@ -446,7 +527,7 @@ export class scanManager {
     // on enregistre la position GPS dans la variable position
     await this.geolocation
       .getCurrentPosition(posOptions)
-      .then(function (resp) {
+      .then(function(resp) {
         console.log("LOCALISATION CHOPPÉ");
 
         position = {
@@ -454,7 +535,7 @@ export class scanManager {
           longitude: resp.coords.longitude
         };
       })
-      .catch(function (error) {
+      .catch(function(error) {
         position = {
           latitude: null,
           longitude: null
@@ -469,7 +550,8 @@ export class scanManager {
     this.infoConfig["bals"][idBalise - 1]["latitude"] = position.latitude;
     console.log(
       "position ajouté dans " +
-      JSON.stringify(this.infoConfig["bals"][idBalise - 1])
+        JSON.stringify(this.infoConfig["bals"][idBalise - 1])
     );
+    this.allQRScanned();
   }
 }
