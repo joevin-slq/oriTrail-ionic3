@@ -198,7 +198,7 @@ export class scanManager {
    * @param seconds
    * @param stopwatch
    */
-  private watchEndTime;
+  private watchReferenceTime; // reference time is: end for countdown, start for stopwatch
   private watchHours;
   private watchMins;
   private watchMsLeft;
@@ -207,7 +207,12 @@ export class scanManager {
 
   private countdownWatch(minutes, seconds, stopwatch: boolean) {
     this.watchStopWatch = stopwatch;
-    this.watchEndTime = +new Date() + 1000 * (60 * minutes + seconds) + 500;
+    if (stopwatch) {
+      this.watchReferenceTime = +new Date();
+    } else {
+      this.watchReferenceTime =
+        +new Date() + 1000 * (60 * minutes + seconds) + 500;
+    }
     this.updateTimer();
   }
 
@@ -217,25 +222,24 @@ export class scanManager {
 
   private updateTimer() {
     if (this.watchStopWatch) {
-      this.watchMsLeft = this.watchEndTime + +new Date();
+      this.watchTime = new Date(+new Date() - this.watchReferenceTime);
     } else {
-      this.watchMsLeft = this.watchEndTime - +new Date();
-    }
-
-    if (this.watchMsLeft < 1000) {
-      this.displayedTimer = "countdown's over!";
-    } else {
+      this.watchMsLeft = this.watchReferenceTime - +new Date();
       this.watchTime = new Date(this.watchMsLeft);
-      this.watchHours = this.watchTime.getUTCHours();
-      this.watchMins = this.watchTime.getUTCMinutes();
-      this.displayedTimer =
-        (this.watchHours
-          ? this.watchHours + ":" + this.twoDigits(this.watchMins)
-          : this.watchMins) +
-        ":" +
-        this.twoDigits(this.watchTime.getUTCSeconds());
-      setTimeout(this.updateTimer, this.watchTime.getUTCMilliseconds() + 500);
     }
+    console.log("this.watchTime = " + +this.watchTime);
+
+    this.watchHours = this.watchTime.getUTCHours();
+    this.watchMins = this.watchTime.getUTCMinutes();
+    this.displayedTimer =
+      (this.watchHours
+        ? this.watchHours + ":" + this.twoDigits(this.watchMins)
+        : this.watchMins) +
+      ":" +
+      this.twoDigits(this.watchTime.getUTCSeconds());
+    setTimeout(this.updateTimer, this.watchTime.getUTCMilliseconds() + 500);
+
+    console.log("this.displayedTimer = " + this.displayedTimer);
   }
   //----- /Watch --------
 
@@ -377,14 +381,14 @@ export class scanManager {
   // retourne: est-ce que toutes les balises on été scanné ? (y compris la balise fin)
   private allQRScanned() {
     // comparer les balise à scanner et les balise scanné
-    let areAllQRScanned = true;
+    let areAllQRScanned: boolean = true;
     for (let element of this.infoConfig.bals) {
       if (this.isIDAlreadyScanned(element.num) == false) {
         areAllQRScanned = false;
       }
     }
 
-    if (!areAllQRScanned && this.mode == "P") {
+    if (!areAllQRScanned && this.infoConfig.type == "P" && this.mode == "C") {
       if (this.nextQRID == this.stopQRID + 1) {
         areAllQRScanned = true;
       }

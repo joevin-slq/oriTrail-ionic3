@@ -47,7 +47,7 @@
       <div style="height: 100%">
         <!-- mode parcours -->
         <h1 *ngIf="infoConfig?.type == 'P'">Scannez la balise n° {{nextQRID}} <br/>
-          {{infoConfig?.bals[nextQRID-1].nom}}</h1>
+         nom de la balise: {{infoConfig?.bals[nextQRID-1].nom}}</h1>
         <!-- mode score -->
         <h1 *ngIf="infoConfig?.type == 'S'">Scannez les balises de la course.
           <br/> Votre score est de {{score}}</h1>
