@@ -10,7 +10,9 @@
         Bienvenue sur la page d'accueil d'Oritrail
       </p>
   <div class="user">
+    <hr/>
     <h3>Espace membre</h3>
+    <hr/>
     <p *ngIf="connecter == 'non'">
       <button ion-button (click)="seconnecter()">Se connecter</button>
       <button ion-button (click)="sinscrire()">S'enregistrer</button>
@@ -21,8 +23,9 @@
     </p>
   </div>
   <div class="run" *ngIf="state != 'resultat'">
+    <hr/>
     <h3>Espace course</h3>
-
+    <hr/>
     <p>
       <button ion-button (click)="installerCourse()">Installer une course</button>
       <button ion-button (click)="participerCourse()">Participer à une course</button>
@@ -30,7 +33,9 @@
   </div>
   <div *ngIf="state == 'resultat'">
     <div class="resultat">
+      <hr/>
       <h3>Envoyer <span *ngIf="mode == 'course'">les résultats</span><span *ngIf="mode == 'installation'">l'installation</span></h3>
+      <hr/>
       <div>
         <p>{{envoyer}}</p>
       </div>

@@ -164,13 +164,38 @@ export class AccueilPage {
         await this.storage.get('token').then((val) => {
           token = val
         });
+
+        let dateDepart = new Date(toSend["bals"][0]["temps_initial"])
+        console.log("date déb timestamp : "  + toSend["bals"][0]["temps_initial"])
+        // parsage de la date de début pour l'api ....
+        toSend["debut"] = dateDepart.getUTCFullYear() + "-" +
+          (dateDepart.getUTCMonth() + 1) + "-" +
+          dateDepart.getUTCDate() + " " +
+          dateDepart.getUTCHours() + ":" +
+          dateDepart.getUTCMinutes() + ":" +
+          dateDepart.getUTCSeconds();
+
+        let dateFin = new Date(toSend["bals"][0]["temps_initial"] +
+          toSend["bals"][toSend["bals"].length - 1]["temps"]);
+        console.log("date fin timestamp : " + toSend["bals"][0]["temps_initial"] +
+        toSend["bals"][toSend["bals"].length - 1]["temps"])
+        // parsage de la date de fin pour l'api ....
+        delete toSend["fin"] // pas très important, ça allége l'envoi
+        toSend["fin"] = dateFin.getUTCFullYear() + "-" +
+          (dateFin.getUTCMonth() + 1) + "-" +
+          dateFin.getUTCDate() + " " +
+          dateFin.getUTCHours() + ":" +
+          dateFin.getUTCMinutes() + ":" +
+          dateFin.getUTCSeconds(); 
+
         // le temps initial est égal à 0
         toSend["bals"][0]["temps"] = "00:00:00";
 
         // on converti les temps en format "hh:mm:ss"
-        for (var i = 1; i < toSend["bals"].length ; i++) {
-           toSend["bals"][i]["temps"] = this.msToHMS(toSend["bals"][i]["temps"]);
+        for (var i = 1; i < toSend["bals"].length; i++) {
+          toSend["bals"][i]["temps"] = this.msToHMS(toSend["bals"][i]["temps"]);
         }
+
 
         console.log("TO SEND arrangé : " + JSON.stringify(toSend, null, 4))
 
@@ -188,7 +213,7 @@ export class AccueilPage {
         // ok
         data.subscribe(async result => { // DONNÉES BIEN ENVOYÉES
           let toast = this.toastCtrl.create({
-            message: `Les données d'installation ont correctement été envoyées.`,
+            message: `Les résultats de la course ont correctement été envoyés.`,
             duration: 4000
           });
           toast.present();
@@ -308,7 +333,7 @@ export class AccueilPage {
     let minutes = Number(seconds / 60); // 60 seconds in 1 minute
     // 4- Keep only seconds not extracted to minutes:
     seconds = seconds % 60;
-    return Math.round(hours) + ":" + Math.round(minutes) + ":" + Math.round(seconds) 
+    return Math.round(hours) + ":" + Math.round(minutes) + ":" + Math.round(seconds)
   }
 
 }
