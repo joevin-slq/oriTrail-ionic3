@@ -23,7 +23,7 @@ import { Geolocation } from '@ionic-native/geolocation';
 import { IonicStorageModule } from '@ionic/storage'
 
 import { Service } from '../utils/services'
-import { Uptime } from '@ionic-native/uptime';
+import { Uptime } from '@devrevolution/uptime';
 
 @NgModule({
   declarations: [

@@ -5,7 +5,7 @@ import { Geolocation } from "@ionic-native/geolocation";
 import { NavController, NavParams } from "ionic-angular";
 import { Service } from "../../utils/services";
 import { ToastController } from "ionic-angular";
-import { Uptime } from "@ionic-native/uptime";
+import { Uptime } from "@devrevolution/uptime";
 import { AccueilPage } from "../accueil/accueil";
 import { Config } from "ionic-angular/config/config";
 
@@ -473,7 +473,7 @@ export class scanManager {
     console.log("updateBaliseTimeScan");
     let uptimeLocal;
     await this.uptime
-      .getUptime()
+      .getUptime(true)
       .then(function(uptime) {
         console.log("UPTIME RÉCUPÉRÉE");
         uptimeLocal = uptime;
