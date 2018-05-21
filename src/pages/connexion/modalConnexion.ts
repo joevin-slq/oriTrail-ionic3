@@ -34,7 +34,7 @@ export class modalConnexion {
     /**
       * Simple appel à l'api pour se connecter
       */
-    loginApi() {
+    public async loginApi() {
         let loader = this.loadingCtrl.create({
             content: "Connexion en cours..."
         });
@@ -43,7 +43,7 @@ export class modalConnexion {
         let id = this.login.id
         let pass = this.login.pass
 
-        let data: Observable<any> = this.http.post("https://www.oritrail.fr/api/token/create",
+        let data: Observable<any> = await this.http.post("https://www.oritrail.fr/api/token/create",
             { login: id, password: pass },
 
         )
@@ -52,7 +52,7 @@ export class modalConnexion {
             // enregistrement du token dans le stockage local
             this.storage.set('token', result[1].token);
 
-            // on récupère toutes les informations de l'utilisateurs... 
+            // on récupère toutes les informations de l'utilisateurs... dans le storage userInfo
             await this.setUserInformation(result[1].token);
  
             // on enleve le loader car le chargement est finit
@@ -106,7 +106,7 @@ export class modalConnexion {
             headers: new HttpHeaders().set('Authorization', "Bearer " + token)
         };
 
-        let data: Observable<any> = this.http.get("https://www.oritrail.fr/api/user",
+        let data: Observable<any> = await this.http.get("https://www.oritrail.fr/api/user",
             httpOptions
         )
         // ok

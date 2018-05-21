@@ -34,7 +34,7 @@ export class modalEnregistrement {
     /**
       * Simple appel à l'api pour se connecter
       */
-    signupApi() {
+    public async signupApi() {
         let loader = this.loadingCtrl.create({
             content: "Enregistrement en cours..."
         });
@@ -48,8 +48,8 @@ export class modalEnregistrement {
         let datenaiss = this.signup.datenaiss
         let sexe = this.signup.sexe
 
-        // TODO FAIRE LA RQT D'ENREGISTREMENT
-        let data: Observable<any> = this.http.post("https://www.oritrail.fr/api/signup",
+        /* Requête d'enregistrement */
+        let data: Observable<any> = await this.http.post("https://www.oritrail.fr/api/signup",
             {
                 login: login, password: pass, nom: nom, prenom: prenom,
                 mail: mail, dateNaissance: datenaiss, sexe: sexe
@@ -57,7 +57,7 @@ export class modalEnregistrement {
 
         )
         // ok
-        data.subscribe(async result => {
+        data.subscribe(async result => { 
             // enregistrement du token dans le stockage local
             this.storage.set('token', result[1].token);
 
@@ -106,7 +106,7 @@ export class modalEnregistrement {
             headers: new HttpHeaders().set('Authorization', "Bearer " + token)
         };
 
-        let data: Observable<any> = this.http.get("https://www.oritrail.fr/api/user",
+        let data: Observable<any> = await this.http.get("https://www.oritrail.fr/api/user",
             httpOptions
         )
         // ok

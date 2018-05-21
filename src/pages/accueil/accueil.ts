@@ -222,7 +222,7 @@ export class AccueilPage {
         };
 
         // on effectue la rqt
-        let data: Observable<any> = this.http.post("https://www.oritrail.fr/api/resultat",
+        let data: Observable<any> = await this.http.post("https://www.oritrail.fr/api/resultat",
           toSend, httpOptions
 
         )
@@ -285,7 +285,7 @@ export class AccueilPage {
         };
 
         // on effectue la rqt
-        let data: Observable<any> = this.http.post("https://www.oritrail.fr/api/install",
+        let data: Observable<any> = await this.http.post("https://www.oritrail.fr/api/install",
           toSend, httpOptions
 
         )
