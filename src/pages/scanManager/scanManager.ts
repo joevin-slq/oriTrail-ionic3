@@ -2,7 +2,7 @@ import { Component, NgZone } from "@angular/core";
 import { Events } from "ionic-angular";
 import { Storage } from "@ionic/storage";
 import { Geolocation } from "@ionic-native/geolocation";
-import { Platform, NavController, NavParams } from "ionic-angular";
+import { NavController, NavParams } from "ionic-angular";
 import { Service } from "../../utils/services";
 import { ToastController } from "ionic-angular";
 import { Uptime } from "@ionic-native/uptime";
@@ -34,8 +34,8 @@ export class scanManager {
   public displayedTimer: string = "";
 
   private eventsManager: Events;
-  private backButtonUnregister: Function;
   private timeout;
+  private watchTimeout;
 
   constructor(
     private geolocation: Geolocation,
@@ -45,7 +45,6 @@ export class scanManager {
     public service: Service,
     public navCtrl: NavController,
     public navParams: NavParams,
-    private platform: Platform,
     public toastCtrl: ToastController,
     public zone: NgZone
   ) {
@@ -126,16 +125,15 @@ export class scanManager {
             this.addQR(info);
             if (this.infoConfig["type"] == "P") {
               // lancer le chrono
-              // TODO passer le temps que doit faire le timer et le prendre en compte dans la fonction
+              // passer le temps que doit faire le timer et le prendre en compte dans la fonction
               this.countdownWatch(0, 0, true);
             } else {
               //lancement de la callback qui limite le temps de scan
-              // var time = this.infoConfig.timp;
+              var time = this.infoConfig.timp;
               //format should be "HH:MM" or "HH:MM:SS"
               console.log(
                 "this.infoConfig.timp = " + JSON.stringify(this.infoConfig.timp)
               );
-              var time = "00:02:20";
               var a = time.split(":"); // split it at the colons
 
               let seconds;
@@ -153,7 +151,7 @@ export class scanManager {
                   this.backToMainMenu();
                 }, seconds * 1000);
               }
-              // TODO passer le temps que doit faire le timer et le prendre en compte dans la fonction
+              // passer le temps que doit faire le timer et le prendre en compte dans la fonction
               this.countdownWatch(0, seconds, false);
             }
           } else {
@@ -202,7 +200,7 @@ export class scanManager {
   private watchHours;
   private watchMins;
   private watchMsLeft;
-  private watchTime;
+  private watchTime = new Date(0);
   private watchStopWatch: boolean;
 
   private countdownWatch(minutes, seconds, stopwatch: boolean) {
@@ -213,7 +211,7 @@ export class scanManager {
       this.watchReferenceTime =
         +new Date() + 1000 * (60 * minutes + seconds) + 500;
     }
-    this.updateTimer();
+    this.watchTimeout = setInterval(() =>{this.updateTimer()}, 500);
   }
 
   private twoDigits(n) {
@@ -222,10 +220,10 @@ export class scanManager {
 
   private updateTimer() {
     if (this.watchStopWatch) {
-      this.watchTime = new Date(+new Date() - this.watchReferenceTime);
+      this.watchTime.setTime(+new Date() - this.watchReferenceTime);
     } else {
       this.watchMsLeft = this.watchReferenceTime - +new Date();
-      this.watchTime = new Date(this.watchMsLeft);
+      this.watchTime.setTime(this.watchMsLeft);
     }
     console.log("this.watchTime = " + +this.watchTime);
 
@@ -237,7 +235,6 @@ export class scanManager {
         : this.watchMins) +
       ":" +
       this.twoDigits(this.watchTime.getUTCSeconds());
-    setTimeout(this.updateTimer, this.watchTime.getUTCMilliseconds() + 500);
 
     console.log("this.displayedTimer = " + this.displayedTimer);
   }
@@ -248,10 +245,6 @@ export class scanManager {
     this.eventsManager.publish("scanManager:startScanning");
     this.state = "config";
 
-    //sabotage du bouton retour
-    this.backButtonUnregister = this.platform.registerBackButtonAction(() => {
-      /*Do nothing*/
-    }, 1);
   }
 
   /**
@@ -277,9 +270,7 @@ export class scanManager {
   public backToMainMenu() {
     this.stopScanning();
 
-    if (this.backButtonUnregister != undefined) {
-      this.backButtonUnregister();
-    }
+    clearInterval(this.watchTimeout);
     this.state = "before"; // seems useless, yes it should be, so delete it ?
     // on enregistre les informations de résultat
     if (this.infoConfig != null) {

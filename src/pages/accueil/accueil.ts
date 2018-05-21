@@ -9,7 +9,7 @@ import { modalConnexion } from "../connexion/modalConnexion";
 import { modalEnregistrement } from "../enregistrement/modalEnregistrement";
 import { scanManager } from "../scanManager/scanManager";
 import { ViewEncapsulation } from '@angular/core'
-import { ToastController } from "ionic-angular";
+import { ToastController,Platform } from "ionic-angular";
 
 import { Observable } from 'rxjs/Observable'
 
@@ -41,12 +41,16 @@ export class AccueilPage {
     public zone: NgZone,
     public navparams: NavParams,
     public toastCtrl: ToastController,
+    private platform: Platform,
     private viewCtrl: ViewController
   ) {
     //set a key/value
     this.storage.set("api", "http://www.oritrail.fr/api/");
 
-    // debug
+    //sabotage du bouton retour
+    this.platform.registerBackButtonAction(() => {
+      /*Do nothing*/
+    }, 1);
 
 
     this.zone.run(async () => {
@@ -57,7 +61,7 @@ export class AccueilPage {
           alreadyResultat = true;
         }
       });
-      // si on a des résultat à envoyer (paramètre de navigation de la vue depuis scanManager) 
+      // si on a des résultat à envoyer (paramètre de navigation de la vue depuis scanManager)
       // ou si il y avait déjà des résultats présent
       if (navparams.get("resultat") != null || alreadyResultat) {
         // on affiche sur la page d'accueil qu'on peut envoyer des résultats
@@ -90,7 +94,7 @@ export class AccueilPage {
     //this.forgetRslt();
   }
 
-  // on a pas besoin de la navigation par backboutton, donc on le désactive complétement 
+  // on a pas besoin de la navigation par backboutton, donc on le désactive complétement
   // quand on arrive sur la vue
   ionViewWillEnter() {
     this.viewCtrl.showBackButton(false);
@@ -147,7 +151,7 @@ export class AccueilPage {
     this.zone.run(() => {
       // on récupére les résultats à renvoyer
       this.storage.get('resultat').then(async (resultat) => {
-        // PREPARATION JSON A ENVOYER À L'API 
+        // PREPARATION JSON A ENVOYER À L'API
         let toSend = resultat;
 
         console.log("TO SEND ori : " + JSON.stringify(toSend, null, 4))
@@ -155,7 +159,7 @@ export class AccueilPage {
         // renommage du champs id en id_course...
         toSend.id_course = toSend.id;
         delete toSend.id;
-        // ajout de l'id utilisateur 
+        // ajout de l'id utilisateur
         await this.storage.get('userInfo').then((val) => {
           toSend.id_user = val.id_user
         });
@@ -200,7 +204,7 @@ export class AccueilPage {
         console.log("TO SEND arrangé : " + JSON.stringify(toSend, null, 4))
 
         // ajout du token d'authentification
-        // set de l'header pour la requête avec le token 
+        // set de l'header pour la requête avec le token
         const httpOptions = {
           headers: new HttpHeaders().set('Authorization', "Bearer " + token)
         };
@@ -246,13 +250,13 @@ export class AccueilPage {
     this.zone.run(() => {
       // on récupére les résultats à renvoyer
       this.storage.get('resultat').then(async (resultat) => {
-        // PREPARATION JSON A ENVOYER À L'API 
+        // PREPARATION JSON A ENVOYER À L'API
         let toSend = resultat;
         /* on renomme les champs pour que l'api puissent les interpréter : */
         // renommage du champs id en id_course...
         toSend.id_course = toSend.id;
         delete toSend.id;
-        // ajout de l'id utilisateur 
+        // ajout de l'id utilisateur
         await this.storage.get('userInfo').then((val) => {
           toSend.id_user = val.id_user
         });
@@ -263,7 +267,7 @@ export class AccueilPage {
         });
 
         // ajout du token d'authentification
-        // set de l'header pour la requête avec le token 
+        // set de l'header pour la requête avec le token
         const httpOptions = {
           headers: new HttpHeaders().set('Authorization', "Bearer " + token)
         };
@@ -301,7 +305,7 @@ export class AccueilPage {
     });
 
   }
-  // Enleve sur la page les options pour envoyer les résultats 
+  // Enleve sur la page les options pour envoyer les résultats
   private enleverResultatAEnvoyer() {
     this.zone.run(() => {
       this.state = "before";
@@ -311,7 +315,7 @@ export class AccueilPage {
     });
   }
 
-  // suppression des objets 
+  // suppression des objets
   public async forgetRslt() {
     await this.storage.remove("resultat");
     await this.storage.remove("mode");
@@ -319,9 +323,9 @@ export class AccueilPage {
 
   /**
    * Convertir un temps en milliseconde vers un format "hh:mm:ss"
-   * Ajout de round 
+   * Ajout de round
    * origine : https://tinyurl.com/ybva68zf
-   * @param ms 
+   * @param ms
    */
   public msToHMS(ms) {
     // 1- Convert to seconds:
