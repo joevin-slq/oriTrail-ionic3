@@ -1,43 +1,59 @@
 <ion-header>
 
-    <ion-navbar>
-      <ion-buttons start>
-        <button ion-button (click)="dismiss()">Close</button>
-      </ion-buttons>
-      <ion-title>Enregistrement</ion-title>
-    </ion-navbar>
-  
-  </ion-header>
-  
-  
-  <ion-content padding>
-     
-    <p> Veuillez renseigner vos futurs identifiants : </p>
-    <form (ngSubmit)="loginApi()">
-        <ion-item>
-            <ion-label color="primary" stacked>Nom</ion-label>
-            <ion-input [(ngModel)]="signup.nom" name="nom" placeholder="ex : Dubois"></ion-input>
-        </ion-item>
-        <ion-item>
-            <ion-label color="primary" stacked>Prénom</ion-label>
-            <ion-input [(ngModel)]="signup.prenom" name="prenom" placeholder="ex : John"></ion-input>
-        </ion-item>
-        <ion-item>
-            <ion-label color="primary" stacked>Identifiant (email)</ion-label>
-            <ion-input [(ngModel)]="signup.id" name="id" placeholder="ex : john@gmail.com"></ion-input>
-        </ion-item>
-        <ion-item>
-          <ion-label color="primary" stacked>Mot de passe</ion-label>
-          <ion-input [(ngModel)]="signup.pass" name="pass" placeholder="ex : superMDP123"></ion-input>
-        </ion-item>
-        <ion-item>
-          <ion-label color="primary" stacked>Confirmation mot de passe</ion-label>
-          <ion-input [(ngModel)]="signup.confirm_pass" name="confirm_pass" placeholder="ex : superMDP123"></ion-input>
-        </ion-item>
-    
-        <button ion-button type="submit" block>S'enregistrer</button>
-    </form>
-    <hr/>
-    <div [innerHtml]="resultatEnregistrement" style="color:darkgreen;"></div> 
-  
-  </ion-content>
+  <ion-navbar>
+    <ion-buttons start>
+      <button ion-button (click)="dismiss()">Close</button>
+    </ion-buttons>
+    <ion-title>Enregistrement</ion-title>
+  </ion-navbar>
+
+</ion-header>
+
+
+<ion-content padding>
+
+  <p> Veuillez renseigner vos futurs identifiants : </p>
+  <form (ngSubmit)="signupApi()">
+    <ion-item>
+      <ion-label color="primary" stacked>Nom</ion-label>
+      <ion-input  [(ngModel)]="signup.nom" name="nom" placeholder="ex : Dubois"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label color="primary" stacked>Prénom</ion-label>
+      <ion-input [(ngModel)]="signup.prenom" name="prenom" placeholder="ex : John"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label color="primary" stacked>Login</ion-label>
+      <ion-input autocapitalize="none" [(ngModel)]="signup.login" name="login" placeholder="ex : johnydu12"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label color="primary" stacked>Email</ion-label>
+      <ion-input autocapitalize="none" [(ngModel)]="signup.mail" name="mail" placeholder="ex : john@gmail.com"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label color="primary" stacked>Mot de passe</ion-label>
+      <ion-input autocapitalize="none" [(ngModel)]="signup.pass" name="pass" placeholder="ex : superMDP123"></ion-input>
+    </ion-item>
+    <ion-item>
+      <ion-label>Date de naissance</ion-label>
+      <ion-datetime displayFormat="DD-MM-YYYY" [(ngModel)]="signup.datenaiss" name="datenaiss"></ion-datetime>
+    </ion-item>
+    <ion-label color="primary" stacked>Sexe</ion-label>
+    <ion-list radio-group [(ngModel)]="signup.sexe" name="sexe">
+      <ion-item>
+        <ion-label>Masculin</ion-label>
+        <ion-radio value="M" checked></ion-radio>
+      </ion-item>
+      <ion-item>
+        <ion-label>Féminin</ion-label>
+        <ion-radio value="F"></ion-radio>
+      </ion-item>
+    </ion-list>
+
+
+    <button ion-button type="submit" block>S'enregistrer</button>
+  </form>
+  <hr/>
+  <div [innerHtml]="resultatEnregistrement" style="color:darkgreen;"></div>
+
+</ion-content>

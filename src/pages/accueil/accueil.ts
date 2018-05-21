@@ -123,6 +123,18 @@ export class AccueilPage {
   public sinscrire() {
     let profileModal = this.modalCtrl.create(modalEnregistrement);
     profileModal.present();
+    profileModal.onDidDismiss(async data => {
+      // on met à jour la vue
+      if (data == "ok") {
+        this.zone.run(async () => {
+          await this.storage.get('userInfo').then((val) => {
+            console.log("INFO CONNEXION : " + JSON.stringify(val))
+            this.userInfo = val.prenom + " " + val.nom
+          });
+          this.connecter = "oui"
+        })
+      }
+    });
   }
 
   public sedeconnecter() {

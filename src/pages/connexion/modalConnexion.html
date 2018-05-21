@@ -16,16 +16,14 @@
     <form (ngSubmit)="loginApi()">
         <ion-item>
             <ion-label color="primary" stacked>Identifiant</ion-label>
-            <ion-input [(ngModel)]="login.id" name="id" placeholder="ex : john@gmail.com"></ion-input>
+            <ion-input autocapitalize="none" [(ngModel)]="login.id" name="id" placeholder="ex : john@gmail.com"></ion-input>
         </ion-item>
         <ion-item>
             <ion-label color="primary" stacked>Mot de passe</ion-label>
-            <ion-input [(ngModel)]="login.pass" name="pass" placeholder="ex : superMDP123"></ion-input>
+            <ion-input autocapitalize="none" [(ngModel)]="login.pass" name="pass" placeholder="ex : superMDP123"></ion-input>
         </ion-item>
     
         <button ion-button type="submit" block>Se connecter</button>
     </form>
-    <hr/>
-    <div [style.color]="getConnexionStatusColor()" [innerHtml]="resultatConnexion"></div> 
   
   </ion-content>
