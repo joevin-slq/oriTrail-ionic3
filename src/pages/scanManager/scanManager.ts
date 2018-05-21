@@ -225,7 +225,6 @@ export class scanManager {
       this.watchMsLeft = this.watchReferenceTime - +new Date();
       this.watchTime.setTime(this.watchMsLeft);
     }
-    console.log("this.watchTime = " + +this.watchTime);
 
     this.watchHours = this.watchTime.getUTCHours();
     this.watchMins = this.watchTime.getUTCMinutes();
@@ -235,8 +234,6 @@ export class scanManager {
         : this.watchMins) +
       ":" +
       this.twoDigits(this.watchTime.getUTCSeconds());
-
-    console.log("this.displayedTimer = " + this.displayedTimer);
   }
   //----- /Watch --------
 
