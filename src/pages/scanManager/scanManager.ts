@@ -211,7 +211,9 @@ export class scanManager {
       this.watchReferenceTime =
         +new Date() + 1000 * (60 * minutes + seconds) + 500;
     }
-    this.watchTimeout = setInterval(() =>{this.updateTimer()}, 500);
+    this.watchTimeout = setInterval(() => {
+      this.updateTimer();
+    }, 500);
   }
 
   private twoDigits(n) {
@@ -241,7 +243,6 @@ export class scanManager {
     console.log("startScanning()");
     this.eventsManager.publish("scanManager:startScanning");
     this.state = "config";
-
   }
 
   /**
@@ -511,6 +512,13 @@ export class scanManager {
    */
   private async updateBalisePosition(idBalise: number) {
     console.log("updateBalisePosition");
+
+    //if we don't have any gps in run mode -> it doesn't matter.
+    if (this.mode == "C") {
+      this.infoConfig["bals"][idBalise - 1]["longitude"] = null;
+      this.infoConfig["bals"][idBalise - 1]["latitude"] = null;
+    }
+
     let position;
     var posOptions = {
       enableHighAccuracy: true,
